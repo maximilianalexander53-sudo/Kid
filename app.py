@@ -4,16 +4,19 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 import json
+import os
+from gtts import gTTS
+from moviepy.editor import ImageClip, AudioFileClip
+from PIL import Image, ImageDraw, ImageFont
 
-# --- إعدادات الصفحة الرئيسية ---
+# --- إعدادات الصفحة ---
 st.set_page_config(
     page_title="AI Executive Agent",
     page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# --- 1. إدارة قاعدة البيانات الداخلية للمهام ---
+# --- 1. قاعدة البيانات ---
 def init_db():
     conn = sqlite3.connect('ai_agent_executive.db')
     c = conn.cursor()
@@ -44,134 +47,119 @@ def add_task(title, category, status, details=""):
 
 def get_all_tasks():
     conn = sqlite3.connect('ai_agent_executive.db')
-    df = pd.read_sql_query(
-        "SELECT id AS 'ID', task_title AS 'المهمة', category AS 'المجال', status AS 'الحالة', created_at AS 'التاريخ', details AS 'التفاصيل' FROM tasks ORDER BY id DESC", 
-        conn
-    )
+    df = pd.read_sql_query("SELECT id AS 'ID', task_title AS 'المهمة', category AS 'المجال', status AS 'الحالة', created_at AS 'التاريخ', details AS 'التفاصيل' FROM tasks ORDER BY id DESC", conn)
     conn.close()
     return df
 
-# --- 2. محرك Polymarket Gamma API ---
+# --- 2. محرك إنتاج الفيديو والصوت المباشر ---
+def generate_video_file(text_voice, title_text, output_mp4="generated_video.mp4"):
+    # أ) توليد ملف التعليق الصوتي
+    audio_path = "temp_voice.mp3"
+    tts = gTTS(text=text_voice, lang='ar')
+    tts.save(audio_path)
+    
+    # ب) إنشاء تصميم خلفية الفيديو (مقاس Shorts 1080x1920)
+    img_width, img_height = 1080, 1920
+    image = Image.new('RGB', (img_width, img_height), color=(15, 23, 42))
+    draw = ImageDraw.Draw(image)
+    
+    # رسم إطار ديكوري وتصميم
+    draw.rectangle([50, 50, img_width-50, img_height-50], outline=(59, 130, 246), width=8)
+    draw.text((100, 800), f"📌 {title_text[:30]}...", fill=(255, 255, 255))
+    
+    bg_path = "temp_bg.png"
+    image.save(bg_path)
+    
+    # ج) تجميع الصوتي والصورة في فيديو محاكاة عبر MoviePy
+    audio_clip = AudioFileClip(audio_path)
+    video_clip = ImageClip(bg_path).set_duration(audio_clip.duration)
+    video_clip = video_clip.set_audio(audio_clip)
+    
+    video_clip.write_videofile(
+        output_mp4,
+        fps=24,
+        codec='libx264',
+        audio_codec='aac',
+        verbose=False,
+        logger=None
+    )
+    
+    audio_clip.close()
+    video_clip.close()
+    
+    # تنظيف الملفات المؤقتة
+    if os.path.exists(audio_path): os.remove(audio_path)
+    if os.path.exists(bg_path): os.remove(bg_path)
+    
+    return output_mp4
+
+# --- 3. محرك Polymarket ---
 def fetch_polymarket_events(limit=15):
     url = f"https://gamma-api.polymarket.com/events?limit={limit}&active=true&closed=false"
     try:
         response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            return response.json()
-        return []
+        return response.json() if response.status_code == 200 else []
     except Exception:
         return []
 
 # --- الواجهة الرئيسية ---
 st.title("🤖 AI Executive Agent")
-st.caption("نظام التسيير التلقائي للذكاء الاصطناعي: Polymarket + YouTube Operations")
+st.caption("نظام التسيير التلقائي وإنتاج المحتوى المباشر")
 
-# القائمة الجانبية للصلاحيات والمفاتيح
-with st.sidebar:
-    st.header("⚙️ الصلاحيات والمفاتيح")
-    openai_key = st.text_input("OpenAI API Key:", type="password")
-    yt_key = st.text_input("YouTube API Key:", type="password")
-    
-    st.markdown("---")
-    st.header("🔒 تفعيل التحكم الذاتي")
-    perm_auto_publish = st.toggle("تفعيل النشر التلقائي لـ YouTube", value=True)
-    perm_auto_trade = st.toggle("تفعيل تحليل المخاطر لـ Polymarket", value=True)
-    
-    st.markdown("---")
-    st.info("الذكاء الاصطناعي يعمل بصلاحيات كاملة لتسيير وحفظ المهام.")
-
-# التبويبات الرئيسية
-tab_poly, tab_yt, tab_tasks = st.tabs(["📈 Polymarket Agent", "🎬 YouTube Agent", "📋 لوحة المهام"])
+tab_poly, tab_yt, tab_tasks = st.tabs(["📈 Polymarket Agent", "🎬 YouTube Video Generator", "📋 لوحة المهام"])
 
 # --- TAB 1: POLYMARKET ---
 with tab_poly:
-    st.subheader("📊 تحليل الفرص والاحتمالات الحية من Polymarket")
-    
+    st.subheader("📊 تحليل الفرص والاحتمالات الحية")
     if st.button("🔄 مسح الأسواق وتحديث البيانات الآن", use_container_width=True):
-        with st.spinner("جاري الاتصال بـ Polymarket Gamma API..."):
-            events = fetch_polymarket_events(limit=15)
-            if events:
-                records = []
-                for ev in events:
-                    title = ev.get('title', 'N/A')
-                    cat = ev.get('category', 'عام')
-                    vol = ev.get('volume', 0)
-                    markets = ev.get('markets', [])
-                    
-                    price_yes = "N/A"
-                    if markets:
-                        prices = markets[0].get('outcomePrices', [])
-                        if prices:
-                            try:
-                                p_list = json.loads(prices) if isinstance(prices, str) else prices
-                                price_yes = f"{float(p_list[0])*100:.1f}%"
-                            except:
-                                price_yes = "N/A"
-                                
-                    records.append({
-                        "الحدث / السوق": title,
-                        "التصنيف": cat,
-                        "احتمال (YES)": price_yes,
-                        "حجم التداول": f"${float(vol):,.0f}" if vol else "$0"
-                    })
-                
-                st.dataframe(pd.DataFrame(records), use_container_width=True)
-                add_task("مسح شمولى لأسواق Polymarket", "Polymarket", "مكتمل", f"تم تحليل {len(events)} سوقاً نشطاً.")
-            else:
-                st.error("تعذر جلب البيانات. تحقق من الاتصال بالإنترنت.")
+        events = fetch_polymarket_events()
+        if events:
+            records = []
+            for ev in events:
+                records.append({
+                    "الحدث": ev.get('title', 'N/A'),
+                    "التصنيف": ev.get('category', 'عام'),
+                    "حجم التداول": f"${float(ev.get('volume', 0)):,.0f}"
+                })
+            st.dataframe(pd.DataFrame(records), use_container_width=True)
+            add_task("مسح أسواق Polymarket", "Polymarket", "مكتمل")
 
-    st.markdown("---")
-    st.subheader("💡 تقييم سوق محدد")
-    selected_market = st.text_input("أدخل اسم الحدث للتحليل:")
-    if st.button("🧠 تحليل المخاطرة والاستراتيجية"):
-        if selected_market:
-            st.info(f"جاري دراسة الأحداث والنسب لـ '{selected_market}'...")
-            st.success("النتيجة: حجم التداول ممتاز والاحتمال مستقر. النسبة الموصى بها لا تتجاوز 2% من رأس المال.")
-            add_task(f"تحليل رهان: {selected_market}", "Polymarket", "مكتمل", "تم استخراج توصية إدارة المخاطر.")
-        else:
-            st.warning("يرجى كتابة اسم السوق أولاً.")
-
-# --- TAB 2: YOUTUBE ---
+# --- TAB 2: YOUTUBE GENERATOR ---
 with tab_yt:
-    st.subheader("🎬 صناعة ونشر المحتوى التلقائي")
+    st.subheader("🎬 محرك إنتاج ومونتاج الفيديو التلقائي")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        topic = st.text_input("موضوع الفيديو المطلوب:")
-        audience = st.selectbox("الجمهور المستهدف:", ["تقنية وذكاء اصطناعي", "تداول واستثمار", "عام", "تعليمي"])
-    with col2:
-        v_type = st.selectbox("نوع الفيديو:", ["YouTube Shorts", "فيديو كامل (Full Length)"])
-
-    if st.button("🚀 إنتاج السكربت وجدولة العمليات", use_container_width=True):
-        if topic:
-            with st.spinner("جاري كتابة السكربت واختيار الهوك والتاغات..."):
-                script_draft = f"""
-                ### 📝 خطة الفيديو: {topic}
-                
-                **🎯 المقدمة (Hook):**
-                "كيف يمكنك استخدام الذكاء الاصطناعي اليوم لتنفيذ مهامك التلقائية بدون تدخل يدوّي؟"
-                
-                **📌 محاور الموضوع ({v_type}):**
-                1. شرح المفهوم وكيفية العمل.
-                2. التطبيق العملي للربط مع APIs.
-                3. الخاتمة ودعوة للمتابعة.
-                
-                **🏷️ الكلمات المفتاحية (Tags):**
-                #ذكاء_اصطناعي #تداول #أتمتة #{topic.replace(' ', '_')}
-                """
-                st.markdown(script_draft)
-                
-                status_text = "تم النشر تلقائياً" if perm_auto_publish else "في مسودة النشر"
-                add_task(f"إنتاج فيديو: {topic}", "YouTube", status_text, f"نوع الفيديو: {v_type} - الجمهور: {audience}")
-                st.success(f"حالة المهمة: {status_text}")
+    topic = st.text_input("موضوع الفيديو المطلوب:")
+    voice_script = st.text_area("نص التعليق الصوتي (Voiceover) المراد تسجيله في الفيديو:", 
+                                value="أهلاً بكم. تطورات جديدة تشهدها منطقة الشرق الأوسط هذا الأسبوع مع تحركات سياسية مكثفة وانعكاسات مباشرة على أسعار الطاقة والأسواق العالمية.", 
+                                height=120)
+    
+    if st.button("🚀 توليد وتصنيع ملف الفيديو (.mp4)", use_container_width=True):
+        if topic and voice_script:
+            with st.spinner("جاري توليد التعليق الصوتي العربي وتركيب مشاهد الفيديو... (قد يستغرق دقيقة)"):
+                try:
+                    video_file = generate_video_file(voice_script, topic)
+                    
+                    st.success("✨ تم إنشاء ملف الفيديو بنجاح!")
+                    
+                    # عرض الفيديو في الصفحة مع إمكانية التحميل
+                    st.video(video_file)
+                    
+                    with open(video_file, "rb") as file:
+                        st.download_button(
+                            label="📥 تحميل ملف الفيديو MP4 للهاتف",
+                            data=file,
+                            file_name=f"{topic[:15]}.mp4",
+                            mime="video/mp4",
+                            use_container_width=True
+                        )
+                        
+                    add_task(f"إنتاج فيديو MP4: {topic}", "YouTube", "تم الإنتاج بنجاح", f"طول النص: {len(voice_script)} حرف")
+                except Exception as e:
+                    st.error(f"حدث خطأ أثناء رندر الفيديو: {str(e)}")
         else:
-            st.warning("أدخل موضوع الفيديو أولاً.")
+            st.warning("يرجى كتابة الموضوع والنص الصوتي أولاً.")
 
 # --- TAB 3: TASKS ---
 with tab_tasks:
     st.subheader("📋 سجل جميع المهام المنفذة")
-    df_tasks = get_all_tasks()
-    if not df_tasks.empty:
-        st.dataframe(df_tasks, use_container_width=True)
-    else:
-        st.info("لا توجد مهام مسجلة حتى الآن.")
+    st.dataframe(get_all_tasks(), use_container_width=True)
