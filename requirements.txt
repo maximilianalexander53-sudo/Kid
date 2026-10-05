@@ -2,5 +2,5 @@ streamlit
 requests
 pandas
 gTTS
-moviepy
+moviepy==1.0.3
 pillow
