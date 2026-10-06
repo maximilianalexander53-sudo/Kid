@@ -2,6 +2,5 @@ streamlit
 requests
 pandas
 edge-tts
-gTTS
 moviepy==1.0.3
 pillow
