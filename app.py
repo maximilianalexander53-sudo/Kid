@@ -1,40 +1,29 @@
-import PIL.Image
-
-# --- إصلاح مشكلة Pillow مع MoviePy ---
-if not hasattr(PIL.Image, 'ANTIALIAS'):
-    PIL.Image.ANTIALIAS = getattr(PIL.Image, 'LANCZOS', PIL.Image.BICUBIC)
-
 import streamlit as st
 import requests
 import sqlite3
 import pandas as pd
 from datetime import datetime
-import json
-import os
-import asyncio
-import edge_tts
-from moviepy.editor import ImageClip, AudioFileClip
-from PIL import ImageDraw
+import time
 
-# --- إعدادات الصفحة ---
+# --- 1. إعدادات الصفحة والتصميم ---
 st.set_page_config(
-    page_title="AI Executive Agent - قردوش",
+    page_title="استوديو فيديوهات قردوش وعسيلة",
     page_icon="🐒",
     layout="wide"
 )
 
-# --- 1. إدارة قاعدة البيانات ---
+# --- 2. إعداد قاعدة البيانات (SQLite) ---
 def init_db():
-    conn = sqlite3.connect('ai_agent_executive.db')
+    conn = sqlite3.connect('qardoush_studio.db')
     c = conn.cursor()
     c.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
+        CREATE TABLE IF NOT EXISTS videos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_title TEXT NOT NULL,
-            category TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            details TEXT
+            title TEXT NOT NULL,
+            character_name TEXT NOT NULL,
+            script_text TEXT NOT NULL,
+            video_url TEXT NOT NULL,
+            created_at TEXT NOT NULL
         )
     ''')
     conn.commit()
@@ -42,128 +31,129 @@ def init_db():
 
 init_db()
 
-def add_task(title, category, status, details=""):
-    conn = sqlite3.connect('ai_agent_executive.db')
+def save_video_project(title, char_name, script_text, video_url):
+    conn = sqlite3.connect('qardoush_studio.db')
     c = conn.cursor()
     c.execute(
-        "INSERT INTO tasks (task_title, category, status, created_at, details) VALUES (?, ?, ?, ?, ?)",
-        (title, category, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), details)
+        "INSERT INTO videos (title, character_name, script_text, video_url, created_at) VALUES (?, ?, ?, ?, ?)",
+        (title, char_name, script_text, video_url, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     conn.commit()
     conn.close()
 
-def get_all_tasks():
-    conn = sqlite3.connect('ai_agent_executive.db')
-    df = pd.read_sql_query("SELECT id AS 'ID', task_title AS 'المهمة', category AS 'المجال', status AS 'الحالة', created_at AS 'التاريخ', details AS 'التفاصيل' FROM tasks ORDER BY id DESC", conn)
+def get_projects():
+    conn = sqlite3.connect('qardoush_studio.db')
+    df = pd.read_sql_query(
+        "SELECT id AS 'المعرف', title AS 'عنوان المقطع', character_name AS 'الشخصية', script_text AS 'النص', video_url AS 'رابط الفيديو', created_at AS 'تاريخ الإنتاج' FROM videos ORDER BY id DESC", 
+        conn
+    )
     conn.close()
     return df
 
-# --- 2. محرك توليد الصوت (Edge TTS) ---
-def generate_ai_voice_edge(text, voice_code, output_path="temp_voice.mp3"):
-    """توليد الصوت بالدارجة أو الفصحى مجاناً"""
-    async def _main():
-        communicate = edge_tts.Communicate(text, voice_code)
-        await communicate.save(output_path)
-    asyncio.run(_main())
-    return output_path
+# --- 3. محرك التحريك والتوليد (D-ID Lip-Sync API) ---
+def generate_talking_character(image_url, script_text, voice_id, api_key):
+    url = "https://api.d-id.com/talks"
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Basic {api_key}"
+    }
+    payload = {
+        "script": {
+            "type": "text",
+            "subtitles": "false",
+            "provider": {"type": "microsoft", "voice_id": voice_id},
+            "input": script_text
+        },
+        "config": {"fluent": "true", "pad_audio": "0.0", "stitch": True},
+        "source_url": image_url
+    }
+    
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code not in [200, 201]:
+        raise Exception(f"خطأ في الاتصال بالخدمة: {response.text}")
+        
+    talk_id = response.json().get("id")
+    status_url = f"https://api.d-id.com/talks/{talk_id}"
+    
+    for _ in range(50):
+        time.sleep(3)
+        status_res = requests.get(status_url, headers=headers).json()
+        if status_res.get("status") == "done":
+            return status_res.get("result_url")
+        elif status_res.get("status") == "error":
+            raise Exception(f"فشل التوليد: {status_res}")
+            
+    raise Exception("استغرق التوليد وقتاً أطول من المتوقع.")
 
-# --- 3. محرك تحريك قردوش مجاناً ---
-def create_qardoush_animated_video(image_url_or_path, audio_path, script_text, output_mp4="qardoush_free.mp4"):
-    """إنشاء فيديو أنيميشن كرتوني لشخصية قردوش بدون أي API Key"""
-    bg_path = "qardoush_bg.png"
-    
-    # جلب صورة قردوش
-    try:
-        if image_url_or_path.startswith("http"):
-            res = requests.get(image_url_or_path, timeout=15)
-            with open(bg_path, "wb") as f:
-                f.write(res.content)
-            img = PIL.Image.open(bg_path).convert('RGB')
-        else:
-            img = PIL.Image.open(image_url_or_path).convert('RGB')
-    except Exception:
-        img = PIL.Image.new('RGB', (1080, 1920), color=(15, 23, 42))
+# --- 4. واجهة التطبيق الرئيسية ---
+st.title("🐒 منصة إنتاج فيديوهات 'قردوش وعسيلة'")
+st.caption("تطبيق مخصص لتوليد مقاطع فيديو متحركة بالذكاء الاصطناعي وبالدارجة المغربية")
 
-    # إضافة إطار وشريط النص الكرتوني
-    img = img.resize((1080, 1920))
-    draw = ImageDraw.Draw(img)
-    draw.rectangle([40, 1400, 1040, 1800], fill=(0, 0, 0), outline=(255, 215, 0), width=6)
-    img.save(bg_path)
-    
-    # دمج الصوت والأنيميشن
-    audio_clip = AudioFileClip(audio_path)
-    duration = audio_clip.duration
-    
-    # حركة كرتونية بسيطة
-    clip = ImageClip(bg_path).set_duration(duration)
-    
-    final_video = clip.set_audio(audio_clip)
-    final_video.write_videofile(output_mp4, fps=24, codec='libx264', audio_codec='aac', verbose=False, logger=None)
-    
-    audio_clip.close()
-    final_video.close()
-    if os.path.exists(bg_path): 
-        os.remove(bg_path)
-    
-    return output_mp4
+# القائمة الجانبية المفتاح
+st.sidebar.header("⚙️ الإعدادات والمفتاح")
+api_key_input = st.sidebar.text_input("D-ID API Key:", type="password")
 
-# --- الواجهة الرئيسية ---
-st.title("🤖 AI Executive Agent")
-st.caption("استوديو إنتاج الفيديوهات والشخصيات مجاناً 100%")
+# التبويبات الرئيسية
+tab_create, tab_history = st.tabs(["🎬 إنتاج مقطع جديد", "📁 الأرشيف والمشاريع"])
 
-tab_yt, tab_tasks = st.tabs(["🐒 شخصية قردوش (بدون API)", "📋 لوحة المهام"])
+with tab_create:
+    st.subheader("1️⃣ معلومات الشخصية والصورة")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 🐒 قردوش")
+        qardoush_img = st.text_input("رابط صورة قردوش:", value="https://i.ibb.co/L5QG7C9/qardoush-maroccan.jpg", key="q_img")
+        qardoush_voice = st.selectbox("صوت قردوش:", ["صوت رجالي مغربي 🇲🇦 (Jamal)", "صوت رجالي فصيح 🇸🇦 (Hamed)"], key="q_v")
+        
+    with col2:
+        st.markdown("### 🦧 عسيلة")
+        aseela_img = st.text_input("رابط صورة عسيلة:", value="https://i.ibb.co/V3Kx82M/aseela-maroccan.jpg", key="a_img")
+        aseela_voice = st.selectbox("صوت عسيلة:", ["صوت نسائي مغربي 🇲🇦 (Mouna)", "صوت نسائي فصيح 🇸🇦 (Zariyah)"], key="a_v")
 
-with tab_yt:
-    st.subheader("🐒 إنتاج فيديو لشخصية 'قردوش' (مجانًا وبدون مفاتيح)")
+    st.markdown("---")
+    st.subheader("2️⃣ السيناريو والحوار بالدارجة")
+    video_title = st.text_input("عنوان الحلقة:", value="حلقة جديدة: قردوش وعسيلة")
     
-    topic = st.text_input("📌 عنوان أو موضوع الفيديو:", value="عبدالصماد الحلاق بولاد سكير")
-    
-    qardoush_img_url = st.text_input(
-        "رابط صورة شخصية 'قردوش':", 
-        value="https://img.freepik.com/free-vector/cute-monkey-sitting-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated-flat_138676-12349.jpg"
-    )
-    
-    script_text = st.text_area("الكلام الذي سيقوله قردوش:", 
-                               value="السلام عليكم أ با الحباب! اليوم خاصني نعود لكم على واحد الأسطورة كاين فـ أولاد سكير... السي عبد الصماد الحلاق، المعروف بـ مول السرعة! ✂️🚀", 
-                               height=120)
-    
-    voice_choice = st.selectbox("اختر صوت قردوش:", [
-        "صوت رجالي مغربي 🇲🇦 (Jamal)",
-        "صوت نسائي مغربي 🇲🇦 (Mouna)",
-        "صوت فصيح 🇸🇦 (Hamed)"
-    ])
-    
-    voice_code_map = {
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        script_q = st.text_area("نص كلام قردوش:", value="السلام عليكم أ با الحباب! اليوم غادي نعود لكم قصة جديدة...", height=100)
+    with col_t2:
+        script_a = st.text_area("نص كلام عسيلة:", value="وا قردوش! وياك ما عاوتاني مشيتي كتقلب على المشاكل فـ الدرب؟", height=100)
+
+    voice_map = {
         "صوت رجالي مغربي 🇲🇦 (Jamal)": "ar-MA-JamalNeural",
         "صوت نسائي مغربي 🇲🇦 (Mouna)": "ar-MA-MounaNeural",
-        "صوت فصيح 🇸🇦 (Hamed)": "ar-SA-HamedNeural"
+        "صوت رجالي فصيح 🇸🇦 (Hamed)": "ar-SA-HamedNeural",
+        "صوت نسائي فصيح 🇸🇦 (Zariyah)": "ar-SA-ZariyahNeural"
     }
 
-    if st.button("🚀 تصنيع فيديو قردوش المباشر (.mp4)", use_container_width=True):
-        if topic and script_text:
-            with st.spinner("جاري معالجة الصوت وأنيميشن قردوش الكرتوني..."):
-                try:
-                    v_code = voice_code_map[voice_choice]
-                    audio_file = generate_ai_voice_edge(script_text, v_code)
-                    video_file = create_qardoush_animated_video(qardoush_img_url, audio_file, script_text)
-                    
-                    st.success("✨ تم إنشاء فيديو قردوش بنجاح!")
-                    st.video(video_file)
-                    
-                    with open(video_file, "rb") as file:
-                        st.download_button(
-                            label="📥 تحميل الفيديو للهاتف MP4",
-                            data=file,
-                            file_name=f"Qardoush_{topic[:10]}.mp4",
-                            mime="video/mp4",
-                            use_container_width=True
-                        )
-                    add_task(f"إنتاج فيديو قردوش: {topic}", "أنيميشن", "مكتمل")
-                except Exception as e:
-                    st.error(f"حدث خطأ: {str(e)}")
-        else:
-            st.warning("يرجى كتابة عنوان السكربت والنص المطلوب.")
+    st.markdown("---")
+    st.subheader("3️⃣ التوليد والتحريك")
+    selected_char = st.radio("اختر الشخصية اللي بغيتي تحركها فـ هاد المقطع:", ["قردوش", "عسيلة"], horizontal=True)
 
-with tab_tasks:
-    st.subheader("📋 سجل جميع المهام المنفذة")
-    st.dataframe(get_all_tasks(), use_container_width=True)
+    if st.button("🚀 بدء توليد الفيديو (.mp4)", use_container_width=True):
+        if not api_key_input:
+            st.error("⚠️ عفاك دخل D-ID API Key فـ القائمة الجانبية الأول.")
+        else:
+            with st.spinner("جاري تحريك الشفاه والوجه بذكاء اصطناعي..."):
+                try:
+                    if selected_char == "قردوش":
+                        c_name, img, script, voice = "قردوش", qardoush_img, script_q, voice_map[qardoush_voice]
+                    else:
+                        c_name, img, script, voice = "عسيلة", aseela_img, script_a, voice_map[aseela_voice]
+                        
+                    url = generate_talking_character(img, script, voice, api_key_input)
+                    st.success(f"✅ تم توليد فيديو {c_name} بنجاح!")
+                    st.video(url)
+                    save_video_project(video_title, c_name, script, url)
+                except Exception as e:
+                    st.error(f"❌ وقع خطأ: {str(e)}")
+
+with tab_history:
+    st.subheader("📁 الفيديوهات المحفوظة سابقاً")
+    df = get_projects()
+    if not df.empty:
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("ما كاين حتى فيديو محفوظ حالياً.")
