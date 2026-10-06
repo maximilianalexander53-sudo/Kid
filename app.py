@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 import json
 import os
+import time
 import urllib.parse
 import asyncio
 import edge_tts
@@ -13,12 +14,12 @@ from PIL import Image, ImageDraw, ImageEnhance
 
 # --- إعدادات الصفحة ---
 st.set_page_config(
-    page_title="AI Executive Agent",
-    page_icon="🤖",
+    page_title="AI Executive Agent - قردوش والإنتاج المرئي",
+    page_icon="🐒",
     layout="wide"
 )
 
-# --- 1. قاعدة البيانات (Task Tracker) ---
+# --- 1. إدارة قاعدة البيانات (SQLite) ---
 def init_db():
     conn = sqlite3.connect('ai_agent_executive.db')
     c = conn.cursor()
@@ -53,9 +54,9 @@ def get_all_tasks():
     conn.close()
     return df
 
-# --- 2. محركات الصوت والصور والفيديو ---
+# --- 2. محركات الصوت والصورة ---
 def generate_ai_voice_edge(text, voice_code, output_path="temp_voice.mp3"):
-    """توليد تعليق صوتي مجاني عالي الجودة عبر Edge TTS"""
+    """توليد صوت مجاني عالي الجودة عبر Edge TTS"""
     async def _main():
         communicate = edge_tts.Communicate(text, voice_code)
         await communicate.save(output_path)
@@ -63,7 +64,7 @@ def generate_ai_voice_edge(text, voice_code, output_path="temp_voice.mp3"):
     return output_path
 
 def generate_elevenlabs_cloned_voice(text, api_key, voice_id, output_path="temp_voice.mp3"):
-    """توليد صوت مستنسخ عبر ElevenLabs API"""
+    """توليد صوت استنساخ شخصي عبر ElevenLabs API"""
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     headers = {
         "Accept": "audio/mpeg",
@@ -83,8 +84,52 @@ def generate_elevenlabs_cloned_voice(text, api_key, voice_id, output_path="temp_
     else:
         raise Exception(f"خطأ ElevenLabs: {res.text}")
 
+def create_did_talking_qardoush(image_url, voice_script, api_key, voice_id="ar-MA-JamalNeural", output_mp4="qardoush_video.mp4"):
+    """تحريك شخصية قردوش وجعلها تتكلم بالذكاء الاصطناعي (D-ID)"""
+    url = "https://api.d-id.com/talks"
+    headers = {
+        "Authorization": f"Basic {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "source_url": image_url,
+        "script": {
+            "type": "text",
+            "subtitles": "false",
+            "provider": {
+                "type": "microsoft",
+                "voice_id": voice_id
+            },
+            "input": voice_script
+        }
+    }
+    
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code != 201:
+        raise Exception(f"خطأ في الاتصال بـ D-ID: {response.text}")
+        
+    talk_id = response.json().get("id")
+    status_url = f"https://api.d-id.com/talks/{talk_id}"
+    
+    # انتظار اكتمال رندر الفيديو
+    for _ in range(35):
+        time.sleep(3)
+        res = requests.get(status_url, headers=headers)
+        if res.status_code == 200:
+            data = res.json()
+            if data.get("status") == "done":
+                result_url = data.get("result_url")
+                video_res = requests.get(result_url)
+                with open(output_mp4, "wb") as f:
+                    f.write(video_res.content)
+                return output_mp4
+            elif data.get("status") == "error":
+                raise Exception("فشلت عملية تحريك الشخصية من المصدر.")
+                
+    raise Exception("استغرق التوليد وقتاً أطول من المتوقع، يرجى المحاولة لاحقاً.")
+
 def fetch_illustrative_image(topic_text, width=1080, height=1920):
-    """جلب صورة توضيحية ذكية ومطابقة للموضوع"""
+    """توليد خلفية توضيحية للفيديوهات العادية"""
     encoded_prompt = urllib.parse.quote(f"{topic_text} news coverage, HD realistic, cinematic lighting")
     image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true"
     
@@ -100,20 +145,18 @@ def fetch_illustrative_image(topic_text, width=1080, height=1920):
     except Exception:
         img = Image.new('RGB', (width, height), color=(15, 23, 42))
         
-    # تعديل السطوع وإضافة تصميم عاجل
     enhancer = ImageEnhance.Brightness(img)
     img = enhancer.enhance(0.5)
     
     draw = ImageDraw.Draw(img)
     draw.rectangle([40, 100, width-40, 280], fill=(0, 0, 0, 180), outline=(59, 130, 246), width=5)
     draw.text((80, 160), "BREAKING NEWS / تغطية خاصة", fill=(239, 68, 68))
-    draw.rectangle([40, height-350, width-40, height-100], fill=(0, 0, 0, 200), outline=(255, 255, 255), width=3)
     
     img.save(bg_path)
     return bg_path
 
-def generate_video_file(audio_path, title_text, target_duration=30, output_mp4="generated_video.mp4"):
-    """مونتاج وتجميع الفيديو بصيغة MP4"""
+def generate_standard_video(audio_path, title_text, target_duration=30, output_mp4="generated_video.mp4"):
+    """رندر ومونتاج الفيديو الإخباري العادي"""
     bg_path = fetch_illustrative_image(title_text)
     audio_clip = AudioFileClip(audio_path)
     
@@ -123,18 +166,9 @@ def generate_video_file(audio_path, title_text, target_duration=30, output_mp4="
     video_clip = ImageClip(bg_path).set_duration(target_duration)
     video_clip = video_clip.set_audio(audio_clip)
     
-    video_clip.write_videofile(
-        output_mp4,
-        fps=24,
-        codec='libx264',
-        audio_codec='aac',
-        verbose=False,
-        logger=None
-    )
-    
+    video_clip.write_videofile(output_mp4, fps=24, codec='libx264', audio_codec='aac', verbose=False, logger=None)
     audio_clip.close()
     video_clip.close()
-    
     if os.path.exists(bg_path): os.remove(bg_path)
     return output_mp4
 
@@ -147,109 +181,156 @@ def fetch_polymarket_events(limit=15):
     except Exception:
         return []
 
-# --- الواجهة الرئيسية ---
+# --- الواجهة الرئيسية للبرنامج ---
 st.title("🤖 AI Executive Agent")
-st.caption("نظام التسيير التلقائي وإنتاج المحتوى المتكامل")
+st.caption("نظام صناعة الفيديوهات بالذكاء الاصطناعي وشخصيات الرسوم المتحركة")
 
-tab_poly, tab_yt, tab_tasks = st.tabs(["📈 Polymarket Agent", "🎬 YouTube Video Generator", "📋 لوحة المهام"])
+tab_yt, tab_poly, tab_tasks = st.tabs(["🎬 استوديو الفيديوهات و'قردوش'", "📈 Polymarket Agent", "📋 لوحة المهام"])
 
-# --- TAB 1: POLYMARKET ---
+# --- TAB 1: استوديو الفيديوهات ---
+with tab_yt:
+    st.subheader("🎯 اختر نوع الإنتاج المطلوب:")
+    video_type = st.radio("وضع الإنتاج:", 
+                          ["🐒 فيديو متحرك بشخصية 'قردوش' (Talking Avatar)", 
+                           "📰 فيديو إخباري عادي (صورة توضيحية + تعليق صوتي)"], 
+                          horizontal=True)
+    
+    st.markdown("---")
+    topic = st.text_input("📌 عنوان أو موضوع الفيديو الرئيسي:")
+    
+    # 🐒 الوضع الأول: شخصية قردوش المتكلمة
+    if video_type == "🐒 فيديو متحرك بشخصية 'قردوش' (Talking Avatar)":
+        st.info("💡 ستقوم شخصية 'قردوش' بالتحدث وتزامن الشفاه مع الصوت بالدارجة المغربية تلقائياً!")
+        
+        qardoush_img_url = st.text_input(
+            "رابط صورة شخصية 'قردوش' (صورة كرتونية بملامح واضحة):", 
+            value="https://img.freepik.com/free-vector/cute-monkey-sitting-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated-flat_138676-12349.jpg"
+        )
+        
+        did_api_key = st.text_input("مفتاح D-ID API Key:", type="password", help="احصل عليه مجاناً من D-ID.com")
+        
+        qardoush_script = st.text_area("الكلام الذي سيقوله قردوش:", 
+                                       value="السلام عليكم! أنا قردوش، اليوم غادي نناقشو موضوع مهم بزاف فالسوق، تبعو معايا الفيديو حتى للخر!", 
+                                       height=100)
+        
+        qardoush_voice = st.selectbox("نبرة صوت قردوش:", [
+            "صوت رجالي مغربي 🇲🇦 (Jamal)",
+            "صوت نسائي مغربي 🇲🇦 (Mouna)",
+            "صوت فصيح 🇸🇦 (Hamed)"
+        ])
+        
+        voice_code_map = {
+            "صوت رجالي مغربي 🇲🇦 (Jamal)": "ar-MA-JamalNeural",
+            "صوت نسائي مغربي 🇲🇦 (Mouna)": "ar-MA-MounaNeural",
+            "صوت فصيح 🇸🇦 (Hamed)": "ar-SA-HamedNeural"
+        }
+        
+        if st.button("🚀 توليد فيديو قردوش المتكلم (.mp4)", use_container_width=True):
+            if topic and qardoush_script and did_api_key and qardoush_img_url:
+                with st.spinner("جاري تحريك قردوش وضبط حركة الفم والوجه..."):
+                    try:
+                        v_code = voice_code_map[qardoush_voice]
+                        video_file = create_did_talking_qardoush(qardoush_img_url, qardoush_script, did_api_key, voice_id=v_code)
+                        
+                        st.success("✨ تم إنشاء فيديو قردوش المتكلم بنجاح!")
+                        st.video(video_file)
+                        
+                        with open(video_file, "rb") as file:
+                            st.download_button(
+                                label="📥 تحميل فيديو قردوش للهاتف MP4",
+                                data=file,
+                                file_name=f"Qardoush_{topic[:10]}.mp4",
+                                mime="video/mp4",
+                                use_container_width=True
+                            )
+                        add_task(f"إنتاج فيديو قردوش: {topic}", "أنيميشن", "مكتمل")
+                    except Exception as e:
+                        st.error(f"حدث خطأ: {str(e)}")
+            else:
+                st.warning("يرجى ملء جميع الخانات (عنوان الفيديو، النص، المفتاح ورابط الصورة).")
+
+    # 📰 الوضع الثاني: فيديو إخباري عادي
+    else:
+        video_duration = st.slider("⏱️ تحديد مدة الفيديو (بالثواني):", min_value=5, max_value=60, value=30, step=5)
+        
+        st.write("🎙️ **مصدر التعليق الصوتي:**")
+        voice_source = st.radio("اختر طريقة الصوت:", 
+                                ["أصوات ذكاء اصطناعي مجانية (Edge TTS)", 
+                                 "رفع تسجيلي الصوتي الخاص مجاناً 🎙️", 
+                                 "صوتي المستنسخ (ElevenLabs API) 🔑"])
+        
+        final_audio_path = "temp_voice.mp3"
+        ready_to_gen = False
+        
+        if voice_source == "أصوات ذكاء اصطناعي مجانية (Edge TTS)":
+            voice_opts = {
+                "صوت رجالي مغربي 🇲🇦 (جمال)": "ar-MA-JamalNeural",
+                "صوت نسائي مغربي 🇲🇦 (منى)": "ar-MA-MounaNeural",
+                "صوت رجالي فصيح 🇸🇦 (حامد)": "ar-SA-HamedNeural",
+                "صوت نسائي فصيح 🇸🇦 (زرياب)": "ar-SA-ZariyahNeural"
+            }
+            sel_voice = st.selectbox("اختر الصوت:", list(voice_opts.keys()))
+            script_text = st.text_area("نص السكربت الصوتي:", value="تطورات عاجلة وشديدة الأهمية فـ الأسواق هاد الأسبوع...", height=100)
+            ready_to_gen = True if topic and script_text else False
+
+        elif voice_source == "رفع تسجيلي الصوتي الخاص مجاناً 🎙️":
+            up_file = st.file_uploader("ارفع مقطعك الصوتي (MP3/WAV):", type=["mp3", "wav"])
+            if up_file:
+                with open(final_audio_path, "wb") as f:
+                    f.write(up_file.getbuffer())
+                st.audio(final_audio_path)
+                ready_to_gen = True if topic else False
+                
+        else:
+            eleven_key = st.text_input("مفتاح ElevenLabs API Key:", type="password")
+            eleven_id = st.text_input("معرف صوتك المستنسخ (Voice ID):")
+            script_text = st.text_area("نص السكربت لنطقه بصوتك:", height=100)
+            ready_to_gen = True if topic and script_text and eleven_key and eleven_id else False
+
+        if st.button("🚀 تصنيع الفيديو العادي (.mp4)", use_container_width=True):
+            if ready_to_gen:
+                with st.spinner("جاري مونتاج الفيديو والصوت..."):
+                    try:
+                        if voice_source == "أصوات ذكاء اصطناعي مجانية (Edge TTS)":
+                            generate_ai_voice_edge(script_text, voice_opts[sel_voice], final_audio_path)
+                        elif voice_source == "صوتي المستنسخ (ElevenLabs API) 🔑":
+                            generate_elevenlabs_cloned_voice(script_text, eleven_key, eleven_id, final_audio_path)
+                            
+                        vid_file = generate_standard_video(final_audio_path, topic, target_duration=video_duration)
+                        st.success("✨ تم إنشاء الفيديو بنجاح!")
+                        st.video(vid_file)
+                        
+                        with open(vid_file, "rb") as file:
+                            st.download_button(
+                                label="📥 تحميل الفيديو للهاتف MP4",
+                                data=file,
+                                file_name=f"{topic[:10]}.mp4",
+                                mime="video/mp4",
+                                use_container_width=True
+                            )
+                        add_task(f"إنتاج فيديو عادي: {topic}", "YouTube", "مكتمل")
+                    except Exception as e:
+                        st.error(f"خطأ أثناء التصنيع: {str(e)}")
+            else:
+                st.warning("يرجى التأكد من ملء جميع البيانات المطلوبة.")
+
+# --- TAB 2: POLYMARKET ---
 with tab_poly:
-    st.subheader("📊 تحليل الفرص الأحداث والحجم المالي")
-    if st.button("🔄 مسح الأسواق وتحديث البيانات الآن", use_container_width=True):
+    st.subheader("📊 تحليل الفرص الأحداث الحية في الأسواق")
+    if st.button("🔄 مسح أسواق Polymarket وتحديث البيانات", use_container_width=True):
         events = fetch_polymarket_events()
         if events:
-            records = []
-            for ev in events:
-                records.append({
-                    "الحدث": ev.get('title', 'N/A'),
-                    "التصنيف": ev.get('category', 'عام'),
-                    "حجم التداول": f"${float(ev.get('volume', 0)):,.0f}"
-                })
+            records = [{
+                "الحدث": ev.get('title', 'N/A'),
+                "التصنيف": ev.get('category', 'عام'),
+                "حجم التداول": f"${float(ev.get('volume', 0)):,.0f}"
+            } for ev in events]
             st.dataframe(pd.DataFrame(records), use_container_width=True)
             add_task("مسح أسواق Polymarket", "Polymarket", "مكتمل")
-
-# --- TAB 2: YOUTUBE GENERATOR ---
-with tab_yt:
-    st.subheader("🎬 محرك تصنيع الفيديو ومونتاجه التلقائي")
-    
-    topic = st.text_input("📌 عنوان أو موضوع الفيديو المطلوب:")
-    video_duration = st.slider("⏱️ تحديد مدة الفيديو (بالثواني):", min_value=5, max_value=60, value=30, step=5)
-    
-    st.markdown("---")
-    st.write("🎙️ **خيارات الصوت المتاحة:**")
-    voice_source = st.radio("اختر طريقة إضافة الصوت:", 
-                            ["أصوات ذكاء اصطناعي مجانية (Edge TTS)", 
-                             "رفع تسجيلي الصوتي الخاص مجاناً 🎙️", 
-                             "صوتي المستنسخ (ElevenLabs API) 🔑"], 
-                            horizontal=False)
-    
-    final_audio_path = "temp_voice.mp3"
-    ready_to_generate = False
-    
-    if voice_source == "أصوات ذكاء اصطناعي مجانية (Edge TTS)":
-        voice_options = {
-            "صوت رجالي مغربي 🇲🇦 (جمال)": "ar-MA-JamalNeural",
-            "صوت نسائي مغربي 🇲🇦 (مطبقة/منى)": "ar-MA-MounaNeural",
-            "صوت رجالي فصيح 🇸🇦 (حامد)": "ar-SA-HamedNeural",
-            "صوت نسائي فصيح 🇸🇦 (زرياب)": "ar-SA-ZariyahNeural",
-            "صوت رجالي مصري 🇪🇬 (شاكر)": "ar-EG-ShakirNeural"
-        }
-        selected_voice_label = st.selectbox("اختر نبرة الصوت المطلوب:", list(voice_options.keys()))
-        selected_voice_code = voice_options[selected_voice_label]
-        
-        voice_script = st.text_area("نص السكربت (التعليق الصوتي):", 
-                                    value="تطورات عاجلة وشديدة الأهمية فـ الشرق الأوسط هاد الأسبوع، متابعة مباشرة للتحركات السياسية وانعكاسها على الأسواق.", 
-                                    height=100)
-        ready_to_generate = True if topic and voice_script else False
-
-    elif voice_source == "رفع تسجيلي الصوتي الخاص مجاناً 🎙️":
-        uploaded_audio = st.file_uploader("ارفع ملف تسجيلك الصوتي من الهاتف (MP3 أو WAV):", type=["mp3", "wav"])
-        if uploaded_audio:
-            with open(final_audio_path, "wb") as f:
-                f.write(uploaded_audio.getbuffer())
-            st.audio(final_audio_path)
-            ready_to_generate = True if topic else False
-            
-    else: # ElevenLabs
-        st.info("💡 لاستخدام صوتك المستنسخ بدون تسجيل كرر، ضع بيانات حسابك فـ ElevenLabs:")
-        eleven_api_key = st.text_input("مفتاح ElevenLabs API Key:", type="password")
-        eleven_voice_id = st.text_input("رمز معرّف صوتك (Voice ID):")
-        
-        voice_script = st.text_area("نص السكربت المراد نطقه بصوتك المستنسخ:", height=100)
-        ready_to_generate = True if topic and voice_script and eleven_api_key and eleven_voice_id else False
-
-    st.markdown("---")
-    if st.button("🚀 توليد وتصنيع ملف الفيديو (.mp4)", use_container_width=True):
-        if ready_to_generate:
-            with st.spinner(f"جاري معالجة الصوت واللقطة وتصنيع فيديو بمدة {video_duration} ثانية..."):
-                try:
-                    if voice_source == "أصوات ذكاء اصطناعي مجانية (Edge TTS)":
-                        generate_ai_voice_edge(voice_script, selected_voice_code, final_audio_path)
-                    elif voice_source == "صوتي المستنسخ (ElevenLabs API) 🔑":
-                        generate_elevenlabs_cloned_voice(voice_script, eleven_api_key, eleven_voice_id, final_audio_path)
-                        
-                    video_file = generate_video_file(final_audio_path, topic, target_duration=video_duration)
-                    
-                    st.success("✨ تم إنشاء الفيديو بنجاح!")
-                    st.video(video_file)
-                    
-                    with open(video_file, "rb") as file:
-                        st.download_button(
-                            label="📥 تحميل ملف الفيديو MP4 للهاتف",
-                            data=file,
-                            file_name=f"{topic[:15]}.mp4",
-                            mime="video/mp4",
-                            use_container_width=True
-                        )
-                        
-                    add_task(f"إنتاج فيديو ({video_duration} ثانية): {topic}", "YouTube", "تم الإنتاج بنجاح")
-                except Exception as e:
-                    st.error(f"حدث خطأ أثناء رندر الفيديو: {str(e)}")
         else:
-            st.warning("يرجى ملء كافة الخانات المطلوبة قبل البدء.")
+            st.info("لم يتم العثور على بيانات أو تعذر الاتصال بالمصدر.")
 
 # --- TAB 3: TASKS ---
 with tab_tasks:
-    st.subheader("📋 سجل جميع المهام المنفذة")
+    st.subheader("📋 سجل جميع المهام المنفذة والعمليات")
     st.dataframe(get_all_tasks(), use_container_width=True)
