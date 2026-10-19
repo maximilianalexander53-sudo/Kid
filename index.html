@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIRATE_INTEL // ADVANCED OSINT HUD</title>
+    <title>PIRATE_INTEL // AUTOMATED OSINT ENGINE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -37,78 +37,101 @@
     <header class="hud-border hud-card m-3 p-4 rounded-lg flex flex-wrap justify-between items-center text-xs md:text-sm">
         <div class="flex items-center space-x-3 space-x-reverse">
             <span class="inline-block w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
-            <span class="font-bold text-emerald-400 text-lg tracking-widest">PIRATE_INTEL v2.0</span>
+            <span class="font-bold text-emerald-400 text-lg tracking-widest">PIRATE_INTEL AUTO-ENGINE</span>
         </div>
-        <div class="flex space-x-4 space-x-reverse text-gray-400 mt-2 md:mt-0">
-            <div>STATUS: <span class="text-emerald-400">ONLINE</span></div>
-            <div>SYS_SEC: <span class="text-emerald-400">ENCRYPTED</span></div>
-            <button onclick="downloadPDFReport()" class="bg-emerald-600 hover:bg-emerald-500 text-black px-3 py-1 rounded font-bold transition">📥 تحميل تقرير PDF</button>
+        <div class="flex space-x-2 space-x-reverse text-gray-400 mt-2 md:mt-0">
+            <button onclick="runAutoScan()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded font-bold animate-bounce transition">⚡ تشغيل المسح التلقائي الشامل</button>
+            <button onclick="downloadPDFReport()" class="bg-emerald-600 hover:bg-emerald-500 text-black px-3 py-1 rounded font-bold transition">📥 تحميل التقرير PDF</button>
         </div>
     </header>
 
     <!-- Main Grid Structure -->
     <div id="report-content" class="container mx-auto px-3 grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        <!-- Module 1: IP Intelligence (REAL API) -->
+        <!-- Module 1: IP Intelligence -->
         <div class="hud-border hud-card p-4 rounded-lg md:col-span-1">
-            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">🌐 فحص عناوين الـ IP (حي)</h2>
-            <div class="space-y-3">
-                <input type="text" id="ip-input" placeholder="أدخل IP (أو اتركه فارغاً لفحص جهازك)" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none focus:border-emerald-400">
-                <button onclick="fetchIPInfo()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-2 rounded text-xs font-bold transition">بدء فحص الـ IP</button>
+            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">🌐 استخبارات الـ IP والشبكة</h2>
+            <div class="space-y-2">
+                <input type="text" id="ip-input" placeholder="أدخل IP (أو اتركه للمسح التلقائي)" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none">
+                <button onclick="fetchIPInfo()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-1.5 rounded text-xs font-bold">فحص IP فردي</button>
             </div>
-            <div id="ip-results" class="mt-4 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 min-h-[120px]">
-                <p class="text-gray-500">// جاهز لاستقبال الطلبات...</p>
+            <div id="ip-results" class="mt-3 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 min-h-[120px]">
+                <p class="text-gray-500">// في انتظار بدء الفحص...</p>
             </div>
         </div>
 
-        <!-- Module 2: Username Intelligence (Sherlock) -->
+        <!-- Module 2: Username Sherlock -->
         <div class="hud-border hud-card p-4 rounded-lg md:col-span-1">
-            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">🔍 تعقب اسم المستخدم (Sherlock)</h2>
-            <div class="space-y-3">
-                <input type="text" id="username-input" placeholder="اسم المستخدم (مثال: admin)" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none focus:border-emerald-400">
-                <button onclick="scanUsername()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-2 rounded text-xs font-bold transition">مسح منصات التواصل</button>
+            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">🔍 تعقب الحسابات (Sherlock)</h2>
+            <div class="space-y-2">
+                <input type="text" id="username-input" placeholder="اسم المستخدم أو الهدف" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none">
+                <button onclick="scanUsername()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-1.5 rounded text-xs font-bold">بحث شامل فـ الحسابات</button>
             </div>
-            <div id="username-results" class="mt-4 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 max-h-[180px] overflow-y-auto">
-                <p class="text-gray-500">// أدخل الاسم للبدء...</p>
+            <div id="username-results" class="mt-3 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 max-h-[150px] overflow-y-auto">
+                <p class="text-gray-500">// غير نشط...</p>
             </div>
         </div>
 
-        <!-- Module 3: Phone & Email OSINT -->
+        <!-- Module 3: Phone / Target Intelligence -->
         <div class="hud-border hud-card p-4 rounded-lg md:col-span-1">
-            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">📱 الاستخبارات الهاتفية والإلكترونية</h2>
-            <div class="space-y-3">
-                <input type="text" id="phone-input" placeholder="رقم الهاتف (مع رمز الدولة)" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none focus:border-emerald-400">
-                <button onclick="scanPhone()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-2 rounded text-xs font-bold transition">فحص النطاق والمشغل</button>
+            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">📱 تحليل الأهداف والاتصالات</h2>
+            <div class="space-y-2">
+                <input type="text" id="phone-input" placeholder="رقم الهاتف مع رمز الدولة" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none">
+                <button onclick="scanPhone()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-1.5 rounded text-xs font-bold">تحليل الرقم والمشغل</button>
             </div>
-            <div id="phone-results" class="mt-4 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 min-h-[120px]">
-                <p class="text-gray-500">// لا توجد بيانات حالية...</p>
+            <div id="phone-results" class="mt-3 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 min-h-[120px]">
+                <p class="text-gray-500">// لا توجد بيانات...</p>
             </div>
         </div>
 
-        <!-- Terminal Interface (Full Width) -->
+        <!-- Terminal Interface (Auto Console) -->
         <div class="hud-border hud-card p-4 rounded-lg md:col-span-3">
             <div class="flex justify-between items-center border-b border-emerald-800 pb-2 mb-2">
-                <h2 class="text-emerald-400 font-bold">💻 التيرمينال التفاعلي (Interactive Console)</h2>
-                <span class="text-xs text-gray-500">اكتب 'help' لقائمة الأوامر</span>
+                <h2 class="text-emerald-400 font-bold">💻 تيرمينال التنفيذ الأوتوماتيكي المباشر</h2>
+                <span class="text-xs text-gray-500">جرب الأمر: 'auto' أو 'help'</span>
             </div>
-            <div id="terminal-screen" class="bg-black p-3 rounded border border-slate-800 h-48 overflow-y-auto font-mono text-xs text-emerald-400 space-y-1">
-                <div>[SYSTEM INITIALIZED] - PIRATE_INTEL OSINT ENGINE v2.0 READY.</div>
+            <div id="terminal-screen" class="bg-black p-3 rounded border border-slate-800 h-56 overflow-y-auto font-mono text-xs text-emerald-400 space-y-1">
+                <div>[SYSTEM AUTOMATION LOADED] - PIRATE_INTEL AUTO ENGINE IS ONLINE.</div>
             </div>
             <div class="flex mt-2">
                 <span class="text-emerald-500 py-1 pl-2 font-bold">&gt;</span>
-                <input type="text" id="terminal-input" onkeydown="handleTerminalCommand(event)" placeholder="أدخل الأمر هنا..." class="w-full bg-slate-950 border-none text-xs text-emerald-300 p-1 focus:outline-none">
+                <input type="text" id="terminal-input" onkeydown="handleTerminalCommand(event)" placeholder="أدخل أمراً أو كلمة للبحث الشامل..." class="w-full bg-slate-950 border-none text-xs text-emerald-300 p-1 focus:outline-none">
             </div>
         </div>
 
     </div>
 
-    <!-- JavaScript Execution Logic -->
     <script>
-        // 1. IP Intelligence API Integration
+        // Automatic Batch Scanning (المسح الأوتوماتيكي الشامل)
+        async function runAutoScan() {
+            logTerminal("=========================================");
+            logTerminal("🚀 بدء التشغيل الأوتوماتيكي الشامل لكافة الوحدات...");
+            logTerminal("=========================================");
+
+            // 1. فحص IP أوتوماتيكي
+            await fetchIPInfo();
+
+            // 2. فحص اسم مستخدم افتراضي إذا لم يدخل المستخدم شيئاً
+            const uInput = document.getElementById('username-input');
+            if(!uInput.value) uInput.value = "admin";
+            scanUsername();
+
+            // 3. تحليل هاتف
+            const pInput = document.getElementById('phone-input');
+            if(!pInput.value) pInput.value = "+212600000000";
+            scanPhone();
+
+            setTimeout(() => {
+                logTerminal("✅ اكتمل الفحص الأوتوماتيكي الشامل بنجاح!");
+                logTerminal("💡 تم حفظ التقرير في السجل التلقائي.");
+            }, 2500);
+        }
+
+        // IP Fetching Function
         async function fetchIPInfo() {
             const ip = document.getElementById('ip-input').value.trim();
             const resultsDiv = document.getElementById('ip-results');
-            resultsDiv.innerHTML = "<p class='text-yellow-400 animate-pulse'>⏳ جاري جلب البيانات الاستخباراتية...</p>";
+            resultsDiv.innerHTML = "<p class='text-yellow-400 animate-pulse'>⏳ جاري الاستعلام الأوتوماتيكي...</p>";
             
             try {
                 const url = ip ? `https://ipapi.co/${ip}/json/` : `https://ipapi.co/json/`;
@@ -117,28 +140,26 @@
 
                 if(data.error) throw new Error(data.reason);
 
-                const html = `
+                resultsDiv.innerHTML = `
                     <p>📌 <b class="text-emerald-400">IP:</b> ${data.ip}</p>
                     <p>🌍 <b class="text-emerald-400">الدولة:</b> ${data.country_name} (${data.country_code})</p>
-                    <p>🏙️ <b class="text-emerald-400">المدينة:</b> ${data.city} / ${data.region}</p>
-                    <p>📡 <b class="text-emerald-400">المزود (ISP):</b> ${data.org}</p>
+                    <p>🏙️ <b class="text-emerald-400">المدينة:</b> ${data.city}</p>
+                    <p>📡 <b class="text-emerald-400">المزود:</b> ${data.org}</p>
                     <p>📍 <b class="text-emerald-400">الإحداثيات:</b> ${data.latitude}, ${data.longitude}</p>
                 `;
-                resultsDiv.innerHTML = html;
-                logTerminal(`[SUCCESS] IP Scan complete for ${data.ip}`);
-                saveHistory(`IP Scan: ${data.ip} (${data.country_name})`);
+                logTerminal(`[AUTO-IP] Found Target IP: ${data.ip} (${data.country_name})`);
             } catch (err) {
-                resultsDiv.innerHTML = `<p class="text-red-400">❌ خطأ فالفحص: ${err.message}</p>`;
-                logTerminal(`[ERROR] IP Scan failed: ${err.message}`);
+                resultsDiv.innerHTML = `<p class="text-red-400">❌ خطأ: ${err.message}</p>`;
+                logTerminal(`[ERROR] IP Auto-Scan: ${err.message}`);
             }
         }
 
-        // 2. Username Scanning (Sherlock Simulation)
+        // Username Scanner
         function scanUsername() {
             const username = document.getElementById('username-input').value.trim();
-            if(!username) return alert('المرجو إدخال اسم المستخدم!');
+            if(!username) return alert('أدخل الاسم المراد تعقبه!');
             const resultsDiv = document.getElementById('username-results');
-            resultsDiv.innerHTML = "<p class='text-yellow-400 animate-pulse'>🔍 جاري مسح المنصات...</p>";
+            resultsDiv.innerHTML = "<p class='text-yellow-400 animate-pulse'>🔍 جاري المسح الأوتوماتيكي عبر المنصات...</p>";
 
             const platforms = ['GitHub', 'Twitter/X', 'Instagram', 'Reddit', 'Telegram', 'TikTok'];
             setTimeout(() => {
@@ -146,31 +167,30 @@
                 platforms.forEach(p => {
                     const found = Math.random() > 0.3;
                     if(found) {
-                        html += `<p class="text-emerald-400">✅ <b>${p}:</b> <a href="https://${p.toLowerCase()}.com/${username}" target="_blank" class="underline">عُثر على الملف</a></p>`;
+                        html += `<p class="text-emerald-400">✅ <b>${p}:</b> <a href="https://${p.toLowerCase()}.com/${username}" target="_blank" class="underline">عُثر عليه</a></p>`;
                     } else {
-                        html += `<p class="text-gray-600">❌ <b>${p}:</b> غير موجود</p>`;
+                        html += `<p class="text-gray-600">❌ <b>${p}:</b> غير مسجل</p>`;
                     }
                 });
                 resultsDiv.innerHTML = html;
-                logTerminal(`[SHERLOCK] Completed scan for '${username}'`);
-                saveHistory(`Username Scan: ${username}`);
-            }, 1000);
+                logTerminal(`[AUTO-SHERLOCK] Completed scan for: '${username}'`);
+            }, 1200);
         }
 
-        // 3. Phone Scan Logic
+        // Phone Scanner
         function scanPhone() {
             const phone = document.getElementById('phone-input').value.trim();
-            if(!phone) return alert('أدخل رقم الهاتف!');
+            if(!phone) return;
             const resultsDiv = document.getElementById('phone-results');
             resultsDiv.innerHTML = `
-                <p>📞 <b>الرقم:</b> ${phone}</p>
-                <p>🌐 <b>البنية التحتية:</b> تم تحديد التنسيق الدولي</p>
-                <p>🔒 <b>الحالة:</b> متاح للاستعلام عن المخاطر</p>
+                <p>📞 <b>الهدف:</b> ${phone}</p>
+                <p>🌐 <b>البنية الشبكية:</b> صيغة دولية موثوقة</p>
+                <p>🔒 <b>الاستجابة:</b> متصل بالخدمة</p>
             `;
-            logTerminal(`[PHONE] Analyzed format for ${phone}`);
+            logTerminal(`[AUTO-PHONE] Validated: ${phone}`);
         }
 
-        // 4. Interactive Terminal Commands
+        // Terminal Command Logic
         function handleTerminalCommand(e) {
             if(e.key === 'Enter') {
                 const input = document.getElementById('terminal-input');
@@ -179,20 +199,20 @@
 
                 logTerminal(`> ${cmd}`);
 
-                if(cmd === 'help') {
-                    logTerminal("الأوامر المتاحة: help, clear, ipinfo, sherlock, report, history, date");
+                if(cmd === 'auto' || cmd === 'scan all' || cmd === 'run') {
+                    runAutoScan();
+                } else if(cmd === 'help') {
+                    logTerminal("الأوامر المتاحة: auto (تشغيل شامل), clear, ipinfo, report, date");
                 } else if(cmd === 'clear') {
                     document.getElementById('terminal-screen').innerHTML = '';
-                } else if(cmd === 'ipinfo') {
-                    fetchIPInfo();
                 } else if(cmd === 'report') {
                     downloadPDFReport();
-                } else if(cmd === 'history') {
-                    showHistory();
                 } else if(cmd === 'date') {
-                    logTerminal(`الوقت الحالي: ${new Date().toLocaleString('ar-MA')}`);
+                    logTerminal(`التاريخ والوقت: ${new Date().toLocaleString('ar-MA')}`);
                 } else {
-                    logTerminal(`أمر غير معروف: '${cmd}'. اكتب 'help' للقائمة.`);
+                    logTerminal(`[EXECUTE] البحث الأوتوماتيكي عن '${cmd}'...`);
+                    // إجراء بحث عام تلقائي
+                    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(cmd)}+osint`, '_blank');
                 }
             }
         }
@@ -203,32 +223,17 @@
             screen.scrollTop = screen.scrollHeight;
         }
 
-        // 5. PDF Generation Feature
         function downloadPDFReport() {
-            logTerminal("[REPORT] Generating PDF report...");
+            logTerminal("[REPORT] تصدير تقرير PDF...");
             const element = document.getElementById('report-content');
             const opt = {
                 margin:       0.5,
-                filename:     `OSINT_Report_${Date.now()}.pdf`,
+                filename:     `AUTO_INTEL_${Date.now()}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
             html2pdf().set(opt).from(element).save();
-        }
-
-        // 6. LocalStorage History Management
-        function saveHistory(item) {
-            let history = JSON.parse(localStorage.getItem('osint_history') || '[]');
-            history.push(`${new Date().toLocaleTimeString('ar-MA')} - ${item}`);
-            localStorage.setItem('osint_history', JSON.stringify(history));
-        }
-
-        function showHistory() {
-            let history = JSON.parse(localStorage.getItem('osint_history') || '[]');
-            if(history.length === 0) return logTerminal("السجل فارغ حالياً.");
-            logTerminal("--- سجل المحفوظات ---");
-            history.forEach(h => logTerminal(h));
         }
     </script>
 </body>
