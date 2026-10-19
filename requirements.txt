@@ -1,6 +1,0 @@
-streamlit
-phonenumbers
-folium
-streamlit-folium
-geopy
-requests
