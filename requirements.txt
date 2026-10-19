@@ -1,6 +1,6 @@
 streamlit
+phonenumbers
+folium
+streamlit-folium
+geopy
 requests
-pandas
-edge-tts
-moviepy==1.0.3
-pillow
