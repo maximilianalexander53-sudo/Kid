@@ -10,44 +10,60 @@ import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 
-# ----------------- 1. إعدادات الصفحة والتصميم السيبراني -----------------
+# ----------------- 1. إعدادات الصفحة والتصميم (Green Hacker / Pirate Theme) -----------------
 st.set_page_config(
-    page_title="CYBER INTEL // AI OSINT CORE",
-    page_icon="🛡️",
+    page_title="PIRATE INTEL // HACKER OSINT CORE",
+    page_icon="🏴‍☠️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 st.markdown("""
     <style>
-    .stApp { background-color: #050811; color: #e2e8f0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    h1, h2, h3 { color: #00f0ff !important; font-weight: 700 !important; }
-    .stTextInput > div > div > input {
-        background-color: #0a1120 !important;
-        color: #00f0ff !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 8px !important;
+    .stApp { background-color: #020408; color: #00ff66; font-family: 'Courier New', Courier, monospace; }
+    
+    /* اللوغو والعناوين باللون الأخضر البرمجي */
+    h1, h2, h3 { color: #00ff66 !important; font-family: 'Courier New', Courier, monospace; font-weight: 700 !important; text-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
+    
+    /* مربعات الإدخال بتصميم لغة البرمجة */
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea {
+        background-color: #050d08 !important;
+        color: #00ff66 !important;
+        border: 1px solid #00ff66 !important;
+        border-radius: 4px !important;
         padding: 12px !important;
-        font-family: monospace;
+        font-family: 'Courier New', Courier, monospace;
     }
+    .stTextInput > div > div > input:focus {
+        box-shadow: 0 0 15px rgba(0, 255, 102, 0.6) !important;
+    }
+
+    /* أزرار التشغيل السيبرانية */
     .stButton > button {
-        background: linear-gradient(135deg, #0055ff 0%, #00d4ff 100%) !important;
-        color: #ffffff !important;
+        background: linear-gradient(135deg, #003311 0%, #00ff66 100%) !important;
+        color: #020408 !important;
         font-weight: bold !important;
-        border-radius: 8px !important;
+        font-family: 'Courier New', Courier, monospace;
+        border-radius: 4px !important;
         padding: 0.6rem 1rem !important;
-        border: none !important;
-        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3) !important;
+        border: 1px solid #00ff66 !important;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important;
         width: 100% !important;
     }
-    .stButton > button:hover { box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6) !important; }
-    [data-testid="stSidebar"] { background-color: #03060d !important; border-right: 1px solid #1e293b !important; }
+    .stButton > button:hover {
+        background: #00ff66 !important;
+        box-shadow: 0 0 20px rgba(0, 255, 102, 0.8) !important;
+    }
+
+    /* الشريط الجانبي */
+    [data-testid="stSidebar"] { background-color: #010204 !important; border-right: 1px solid #00ff66 !important; }
+    
     .metric-box {
-        background: rgba(10, 17, 32, 0.7);
-        border: 1px solid #1e293b;
-        border-left: 4px solid #00f0ff;
-        padding: 15px;
-        border-radius: 8px;
+        background: rgba(5, 13, 8, 0.8);
+        border: 1px solid #00ff66;
+        border-left: 4px solid #00ff66;
+        padding: 12px;
+        border-radius: 4px;
         margin-bottom: 10px;
     }
     </style>
@@ -55,7 +71,7 @@ st.markdown("""
 
 # ----------------- 2. إدارة قاعدة البيانات (SQLite) -----------------
 def init_db():
-    conn = sqlite3.connect('osint_master.db')
+    conn = sqlite3.connect('pirate_osint.db')
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS searches (
@@ -72,74 +88,65 @@ def init_db():
 init_db()
 
 def save_to_history(q_type, q_value, data):
-    conn = sqlite3.connect('osint_master.db')
+    conn = sqlite3.connect('pirate_osint.db')
     cursor = conn.cursor()
     cursor.execute('INSERT INTO searches (query_type, query_value, result_data, timestamp) VALUES (?, ?, ?, ?)',
                    (q_type, q_value, json.dumps(data, ensure_ascii=False), str(datetime.datetime.now())[:19]))
     conn.commit()
     conn.close()
 
-# ----------------- 3. الوظائف الذكية وأدوات الاستخبار -----------------
+# ----------------- 3. الوظائف والأدوات البرمجية -----------------
 
-# (أ) البحث الذكي بالاسم واللقب فقط (AI & Linux-Style Dorking/Recon)
-def ai_name_recon(full_name):
-    # تنظيف الاسم وتوليد السياقات الاحتمالية (Username Variations)
-    clean_name = full_name.strip().lower()
-    parts = clean_name.split()
-    
-    if len(parts) < 2:
-        return {"error": "المرجو إدخال الاسم واللقب معاً (مثال: Mohamed Alami)"}
-    
-    first, last = parts[0], parts[-1]
-    
-    # توليد الأنماط المحتملة لليوزيرز (Usernames)
-    usernames = [
-        f"{first}{last}",
-        f"{first}.{last}",
-        f"{first}_{last}",
-        f"{last}{first}",
-        f"{first[0]}{last}"
-    ]
-    
-    # روابط المنصات الأساسية للفحص التلقائي
-    social_profiles = {}
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    
-    for u in usernames:
-        platforms = {
-            "Instagram": f"https://www.instagram.com/{u}/",
-            "Facebook": f"https://www.facebook.com/{first}.{last}",
-            "Twitter/X": f"https://twitter.com/{u}",
-            "GitHub": f"https://github.com/{u}"
-        }
-        for plat, url in platforms.items():
-            if plat not in social_profiles:
-                try:
-                    res = requests.get(url, headers=headers, timeout=3)
-                    if res.status_code == 200 and "Page Not Found" not in res.text:
-                        social_profiles[plat] = {"status": "مكتشف ✅", "url": url}
-                    else:
-                        social_profiles[plat] = {"status": "غير مؤكد ❌", "url": url}
-                except:
-                    social_profiles[plat] = {"status": "فحص مغلق ⚠️", "url": url}
-                    
-    # توليد استعلامات البحث المتقدم (Google Dorks) للايميل والمواقع
-    encoded_query = urllib.parse.quote(f'"{full_name}"')
-    dorks = {
-        "بحث عن الإيميلات المحتملة": f"site:hunter.io OR site:rocketreach.co {full_name}",
-        "بحث عن المواقع والمدونات": f"intitle:{full_name} filetype:html OR filetype:php",
-        "Google Search Direct": f"https://www.google.com/search?q={encoded_query}"
+def live_web_search(query, api_key):
+    if not api_key:
+        return {"error": "المرجو إدخال مفتاح Serper/SerpAPI في الشريط الجانبي."}
+    url = "https://google.serper.dev/search"
+    payload = json.dumps({"q": query, "gl": "ma"})
+    headers = {'X-API-KEY': api_key, 'Content-Type': 'application/json'}
+    try:
+        response = requests.request("POST", url, headers=headers, data=payload)
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+def sherlock_username_scan(username):
+    platforms = {
+        "Instagram": f"https://www.instagram.com/{username}/",
+        "Facebook": f"https://www.facebook.com/{username}",
+        "Twitter/X": f"https://twitter.com/{username}",
+        "GitHub": f"https://github.com/{username}",
+        "TikTok": f"https://www.tiktok.com/@{username}",
+        "Reddit": f"https://www.reddit.com/user/{username}",
+        "Pinterest": f"https://www.pinterest.com/{username}/",
+        "Telegram": f"https://t.me/{username}"
     }
-    
-    results = {
-        "الاسم المستهدف": full_name,
-        "الاحتمالات المولدة (Usernames)": usernames,
-        "الحسابات الاجتماعية المستخرجة": social_profiles,
-        "استعلامات الذكاء الاصطناعي (Dorks)": dorks
-    }
+    results = {}
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for plat, url in platforms.items():
+        try:
+            res = requests.get(url, headers=headers, timeout=3)
+            if res.status_code == 200 and "Page Not Found" not in res.text:
+                results[plat] = {"status": "[FOUND] ✅", "url": url}
+            else:
+                results[plat] = {"status": "[NOT_FOUND] ❌", "url": url}
+        except:
+            results[plat] = {"status": "[ERROR] ⚠️", "url": url}
     return results
 
-# (ب) تحليل رقم الهاتف والموقع
+def hunter_email_intel(first_name, last_name, domain="gmail.com"):
+    f, l = first_name.lower().strip(), last_name.lower().strip()
+    generated_emails = [
+        f"{f}.{l}@{domain}",
+        f"{f}{l}@{domain}",
+        f"{f}_{l}@{domain}",
+        f"{f[0]}{l}@{domain}",
+        f"{f}{l[0]}@{domain}"
+    ]
+    results = {}
+    for email in generated_emails:
+        results[email] = "[PATTERN_MATCH] 🔍"
+    return results
+
 def check_phone_with_location(phone_number):
     try:
         parsed_number = phonenumbers.parse(phone_number)
@@ -151,14 +158,14 @@ def check_phone_with_location(phone_number):
         operator = carrier.name_for_number(parsed_number, "ar")
         tz = timezone.time_zones_for_number(parsed_number)
         
-        geolocator = Nominatim(user_agent="cyber_intel_osint")
+        geolocator = Nominatim(user_agent="pirate_osint_core")
         location = geolocator.geocode(country_en)
         lat, lon = (location.latitude, location.longitude) if location else (None, None)
         
         details = {
-            "الصلاحية": "صالح ✅",
-            "الدولة": country_ar if country_ar else "غير معروف",
-            "المشغل": operator if operator else "غير معروف",
+            "الصلاحية": "VALID ✅",
+            "الدولة": country_ar if country_ar else "UNKNOWN",
+            "المشغل": operator if operator else "UNKNOWN",
             "المنطقة الزمنية": list(tz) if tz else [],
             "Lat/Lon": [lat, lon]
         }
@@ -166,22 +173,33 @@ def check_phone_with_location(phone_number):
     except Exception as e:
         return {"error": str(e)}, None, None
 
-# ----------------- 4. واجهة المستخدم الرئيسية -----------------
+# ----------------- 4. واجهة المستخدم (اللوغو الجديد) -----------------
 
-st.title("🛡️ CYBER INTEL // AI OSINT CORE")
-st.markdown("##### نظام الاستخبار الذكي المستوحى من أدوات لينكس (Linux OSINT & AI Recon)")
-st.markdown("---")
+# اللوغو المخصص بعلم القراصنة ولغة البرمجة الخضراء
+st.markdown("""
+    <div style="display: flex; align-items: center; gap: 15px; background: rgba(0,255,102,0.05); padding: 15px; border: 1px solid #00ff66; border-radius: 6px; margin-bottom: 20px;">
+        <span style="font-size: 3rem;">🏴‍☠️</span>
+        <div>
+            <h1 style="margin: 0; font-size: 1.8rem; color: #00ff66;">PIRATE_INTEL // $ OSINT_CORE</h1>
+            <p style="margin: 0; color: #00ff66; font-family: 'Courier New'; opacity: 0.8;">[SYSTEM STATUS: ONLINE] - [MODE: CYBER_PIRATE_RECON]</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-# القائمة الجانبية (Sidebar)
-st.sidebar.title("⚡ LOGS // السجل")
+# الشريط الجانبي
+st.sidebar.title("⚙️ CONFIG // الإعدادات")
+serper_api_key = st.sidebar.text_input("Serper API Key (اختياري):", type="password")
+
+st.sidebar.markdown("---")
+st.sidebar.title("⚡ EXEC_LOGS // السجل")
 if st.sidebar.button("مسح السجل بالكامل"):
-    conn = sqlite3.connect('osint_master.db')
+    conn = sqlite3.connect('pirate_osint.db')
     conn.execute('DELETE FROM searches')
     conn.commit()
     conn.close()
     st.sidebar.success("تم مسح السجل!")
 
-conn = sqlite3.connect('osint_master.db')
+conn = sqlite3.connect('pirate_osint.db')
 cursor = conn.cursor()
 cursor.execute('SELECT query_type, query_value, timestamp FROM searches ORDER BY id DESC LIMIT 10')
 history = cursor.fetchall()
@@ -190,65 +208,85 @@ conn.close()
 for item in history:
     st.sidebar.markdown(f"""
     <div class="metric-box">
-        <small style="color:#00f0ff">[{item[0]}]</small> <b>{item[1]}</b><br>
-        <small style="color:#64748b">⏱️ {item[2]}</small>
+        <small style="color:#00ff66">[{item[0]}]</small> <b>{item[1]}</b><br>
+        <small style="color:#00ff66; opacity:0.6;">⏱️ {item[2]}</small>
     </div>
     """, unsafe_allow_html=True)
 
-# التبويبات الرئيسية
-tab1, tab2, tab3 = st.tabs([
-    "🤖 البحث الذكي بالاسم واللقب (AI Recon)", 
-    "📍 تحديد موقع الرقم (Geo-Phone)", 
-    "🔍 البحث المعمق المتقدم"
+# التبويبات الأربعة
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🌐 1. LIVE_WEB_SEARCH", 
+    "👤 2. SHERLOCK_SCAN", 
+    "📧 3. HUNTER_EMAILS",
+    "📍 4. GEO_PHONE_MAP"
 ])
 
-# ----- التبويب الأول: البحث الذكي بالاسم واللقب فقط -----
 with tab1:
-    st.subheader("🧠 الاستعلام الآلي بالاسم والنسب فقط (AI Social & Web Discovery)")
-    st.markdown("أدخل الاسم واللقب، وسيقوم النظام بتوليد خوارزميات البحث وفحص المنصات تلقائياً.")
-    
-    name_input = st.text_input("أدخل الاسم الكامل (مثال: Mohamed Alami):")
-    
-    if st.button("بدء الفحص والتحليل الذكي"):
-        if name_input:
-            with st.spinner("جاري تشغيل خوارزميات البحث واستخراج الحسابات الاجتماعية والإيميلات..."):
-                recon_data = ai_name_recon(name_input)
-                
-                if "error" in recon_data:
-                    st.error(recon_data["error"])
+    st.subheader("🌐 وحدة البحث الحي الشامل")
+    query_input = st.text_input("أدخل اسم الهدف أو العبارة للبحث:")
+    if st.button("تنفيذ البحث الحقيقي"):
+        if query_input:
+            with st.spinner("جاري الاختراق والاستعلام الحي..."):
+                search_res = live_web_search(query_input, serper_api_key)
+                save_to_history("Live Search", query_input, search_res)
+                if "error" in search_res:
+                    st.warning(search_res["error"])
                 else:
-                    save_to_history("AI Name Recon", name_input, recon_data)
-                    
-                    st.success("تم الانتهاء من التحليل الاستخباري بنجاح!")
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown("### 🌐 الحسابات والمنصات المستخرجة")
-                        for platform, info in recon_data["الحسابات الاجتماعية المستخرجة"].items():
-                            st.markdown(f"- **{platform}**: [{info['status']}]({info['url']})")
-                            
-                    with col2:
-                        st.markdown("### 📧 الإيميلات والمواقع المقترحة")
-                        st.write("أبرز اليوزيرز المحتملة:", recon_data["الاحتمالات المولدة (Usernames)"])
-                        st.json(recon_data["استعلامات الذكاء الاصطناعي (Dorks)"])
-                        
-                    st.download_button(
-                        label="📥 تحميل تقرير الاستخبارات الكامل (JSON)",
-                        data=json.dumps(recon_data, indent=4, ensure_ascii=False),
-                        file_name=f"ai_recon_{name_input.replace(' ', '_')}.json",
-                        mime="application/json"
-                    )
+                    st.success("تم جلب النتائج بنجاح!")
+                    if "organic" in search_res:
+                        for item in search_res["organic"]:
+                            st.markdown(f"### [{item.get('title')}]({item.get('link')})")
+                            st.write(item.get('snippet'))
+                            st.markdown("---")
+                    else:
+                        st.json(search_res)
         else:
-            st.warning("المرجو إدخال الاسم واللقب أولاً.")
+            st.warning("أدخل قيمة للبحث.")
 
-# ----- التبويب الثاني: تحديد موقع الرقم -----
 with tab2:
-    st.subheader("📱 تحليل بيانات الهاتف والتحديد الجغرافي")
-    phone_input = st.text_input("أدخل الرقم مع الرمز الدولي (مثال: +212600000000):")
-    
-    if st.button("بدء المسح وتحديد الموقع"):
+    st.subheader("👤 فحص المنصات الاجتماعية")
+    username_input = st.text_input("أدخل اسم المستخدم (Username):")
+    if st.button("بدء فحص الحسابات"):
+        if username_input:
+            with st.spinner("جاري فحص الخوادم والمنصات..."):
+                sherlock_res = sherlock_username_scan(username_input)
+                save_to_history("Sherlock", username_input, sherlock_res)
+                st.success("تم الفحص!")
+                cols = st.columns(2)
+                idx = 0
+                for plat, info in sherlock_res.items():
+                    with cols[idx % 2]:
+                        if "FOUND" in info["status"]:
+                            st.markdown(f"🟢 **{plat}**: [رابط الحساب]({info['url']})")
+                        else:
+                            st.markdown(f"🔴 **{plat}**: غير موجود")
+                    idx += 1
+        else:
+            st.warning("أدخل اسم المستخدم.")
+
+with tab3:
+    st.subheader("📧 استخراج وتوليد الإيميلات")
+    col_f, col_l = st.columns(2)
+    with col_f:
+        f_name = st.text_input("الاسم الأول:")
+    with col_l:
+        l_name = st.text_input("النسب:")
+    domain_input = st.text_input("النطاق (Domain):", value="gmail.com")
+    if st.button("توليد الإيميلات الذكية"):
+        if f_name and l_name:
+            with st.spinner("جاري تحليل الأنماط..."):
+                hunter_res = hunter_email_intel(f_name, l_name, domain_input)
+                save_to_history("Hunter", f"{f_name} {l_name}", hunter_res)
+                st.json(hunter_res)
+        else:
+            st.error("أدخل الاسم والنسب.")
+
+with tab4:
+    st.subheader("📍 تحديد موقع رقم الهاتف")
+    phone_input = st.text_input("أدخل الرقم مع رمز الدولة (+212...):")
+    if st.button("تحليل الرقم وعرض الخريطة"):
         if phone_input:
-            with st.spinner("جاري استعلام التغطية الجغرافية..."):
+            with st.spinner("جاري الاستعلام الجغرافي..."):
                 details, lat, lon = check_phone_with_location(phone_input)
                 if "error" in details:
                     st.error(details["error"])
@@ -256,20 +294,15 @@ with tab2:
                     save_to_history("Geo-Phone", phone_input, details)
                     c1, c2 = st.columns([1, 1.2])
                     with c1:
-                        st.success("تم التقرير بنجاح!")
+                        st.success("التقرير جاهز!")
                         st.json(details)
                     with c2:
-                        st.subheader("🗺️ الخريطة التفاعلية")
+                        st.subheader("🗺️ الخريطة السيبرانية")
                         if lat and lon:
                             m = folium.Map(location=[lat, lon], zoom_start=6, tiles="CartoDB dark_matter")
-                            folium.Marker([lat, lon], popup=f"TARGET: {phone_input}", icon=folium.Icon(color="info", icon="signal", prefix="fa")).add_to(m)
+                            folium.Marker([lat, lon], popup=f"TARGET: {phone_input}", icon=folium.Icon(color="green", icon="terminal", prefix="fa")).add_to(m)
                             st_folium(m, width=500, height=350)
                         else:
-                            st.warning("تعذر تحديد الإحداثيات على الخريطة.")
+                            st.warning("تعذر تحديد الإحداثيات.")
         else:
-            st.warning("يرجى إدخال رقم الهاتف.")
-
-# ----- التبويب الثالث: البحث المعمق -----
-with tab3:
-    st.subheader("🔍 البحث المتقدم عبر محركات الويب")
-    st.info("هذا القسم مخصص لتوليد صيغ البحث المتقدمة (Dorks) المعتمدة في اختبارات الاختراق وجمع المعلومات المفتوحة.")
+            st.warning("أدخل رقم الهاتف.")
