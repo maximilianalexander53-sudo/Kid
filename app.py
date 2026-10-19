@@ -1,30 +1,45 @@
 import streamlit as st
-import requests
 import sqlite3
-import pandas as pd
-from datetime import datetime
-import time
-import base64
+import requests
+import json
+import datetime
+import re
+import phonenumbers
+from phonenumbers import carrier, geocoder, timezone
+import folium
+from streamlit_folium import st_folium
+from geopy.geocoders import Nominatim
 
-# --- إعدادات الصفحة ---
+# ----------------- 1. إعدادات الصفحة والتصميم -----------------
 st.set_page_config(
-    page_title="استوديو قردوش وعسيلة الناطق (AI Talking Avatar)",
-    page_icon="🐒",
-    layout="wide"
+    page_title="Ultimate OSINT & Intelligence Platform",
+    page_icon="🕵️‍♂️",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- 1. إدارة قاعدة البيانات (SQLite) ---
+# تصميم مظلم احترافي (Terminal / OSINT Style)
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; color: #ffffff; }
+    .stTextInput > div > div > input { background-color: #161b22; color: #58a6ff; border: 1px solid #30363d; }
+    .stButton > button { background-color: #238636; color: white; font-weight: bold; border-radius: 6px; width: 100%; border: none; }
+    .stButton > button:hover { background-color: #2ea043; }
+    .css-1r6slb0, .css-12w0qpk { background-color: #161b22; }
+    </style>
+""", unsafe_allow_html=True)
+
+# ----------------- 2. إدارة قاعدة البيانات (Database) -----------------
 def init_db():
-    conn = sqlite3.connect('qardoush_studio.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS videos (
+    conn = sqlite3.connect('osint_master.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS searches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            character_name TEXT NOT NULL,
-            script_text TEXT NOT NULL,
-            video_url TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            query_type TEXT,
+            query_value TEXT,
+            result_data TEXT,
+            timestamp TEXT
         )
     ''')
     conn.commit()
@@ -32,213 +47,201 @@ def init_db():
 
 init_db()
 
-def save_video_project(title, char_name, script_text, video_url):
-    conn = sqlite3.connect('qardoush_studio.db')
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO videos (title, character_name, script_text, video_url, created_at) VALUES (?, ?, ?, ?, ?)",
-        (title, char_name, script_text, video_url, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    )
+def save_to_history(q_type, q_value, data):
+    conn = sqlite3.connect('osint_master.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO searches (query_type, query_value, result_data, timestamp) VALUES (?, ?, ?, ?)',
+                   (q_type, q_value, json.dumps(data, ensure_ascii=False), str(datetime.datetime.now())[:19]))
     conn.commit()
     conn.close()
 
-def get_projects():
-    conn = sqlite3.connect('qardoush_studio.db')
-    df = pd.read_sql_query(
-        "SELECT id AS 'المعرف', title AS 'عنوان المقطع', character_name AS 'الشخصية', script_text AS 'النص المكتوب', video_url AS 'رابط الفيديو', created_at AS 'تاريخ الإنتاج' FROM videos ORDER BY id DESC", 
-        conn
-    )
+# ----------------- 3. الوظائف البرمجية المتقدمة -----------------
+
+# (أ) تحديد موقع وبيانات رقم الهاتف
+def check_phone_with_location(phone_number):
+    try:
+        parsed_number = phonenumbers.parse(phone_number)
+        if not phonenumbers.is_valid_number(parsed_number):
+            return {"error": "رقم الهاتف غير صالح. تأكد من إدخال فتح الخط الدولي (مثال: +212600000000)"}, None, None
+        
+        country_ar = geocoder.description_for_number(parsed_number, "ar")
+        country_en = geocoder.description_for_number(parsed_number, "en")
+        operator = carrier.name_for_number(parsed_number, "ar")
+        tz = timezone.time_zones_for_number(parsed_number)
+        
+        # تحويل اسم الدولة لإحداثيات
+        geolocator = Nominatim(user_agent="osint_ultimate_platform")
+        location = geolocator.geocode(country_en)
+        
+        lat, lon = None, None
+        if location:
+            lat, lon = location.latitude, location.longitude
+        
+        details = {
+            "الصلاحية": "صالح ✅",
+            "الدولة / المنطقة": country_ar if country_ar else "غير معروف",
+            "المشغل / الشركة": operator if operator else "غير معروف",
+            "المنطقة الزمنية": list(tz) if tz else [],
+            "خط العرض (Lat)": lat,
+            "خط الطول (Lon)": lon
+        }
+        return details, lat, lon
+    except Exception as e:
+        return {"error": str(e)}, None, None
+
+# (ب) فحص اسم المستخدم فـ مواقع التواصل
+def check_username(username):
+    platforms = {
+        "GitHub": f"https://github.com/{username}",
+        "Twitter/X": f"https://twitter.com/{username}",
+        "Instagram": f"https://www.instagram.com/{username}/",
+        "TikTok": f"https://www.tiktok.com/@{username}",
+        "Pinterest": f"https://www.pinterest.com/{username}/",
+        "Reddit": f"https://www.reddit.com/user/{username}"
+    }
+    results = {}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    for platform, url in platforms.items():
+        try:
+            res = requests.get(url, headers=headers, timeout=4)
+            if res.status_code == 200:
+                results[platform] = {"status": "موجود ✅", "url": url}
+            else:
+                results[platform] = {"status": "غير موجود ❌", "url": url}
+        except:
+            results[platform] = {"status": "خطأ فالاتصال ⚠️", "url": url}
+    return results
+
+# (ج) البحث المعمق بالاسم والموقع
+def deep_person_search(name, location):
+    # بناء استعلامات بحث متقدمة (Google Dorks)
+    dorks = [
+        f'"{name}" "{location}" ("+212" OR "06" OR "07" OR "05")',
+        f'"{name}" "{location}" filetype:pdf OR filetype:docx',
+        f'"{name}" site:facebook.com OR site:linkedin.com OR site:instagram.com'
+    ]
+    return {
+        "الاسم الاستعلامي": name,
+        "الموقع الميندي": location,
+        "استعلام الأرقام المفتوحة": dorks[0],
+        "استعلام الملفات العامة": dorks[1],
+        "استعلام السجلات الاجتماعية": dorks[2],
+        "توجيه": "يمكنك نسخ أي من استعلامات Dork المتقدمة أعلاه واستخدامها مباشرة في محرك البحث للوصول للسجلات المتاحة علنياً."
+    }
+
+# ----------------- 4. الواجهة الرئيسية والتفاعلية -----------------
+
+st.title("🛡️ Ultimate OSINT & Intelligence Platform")
+st.markdown("منصة شاملة لجمع وتحليل المعطيات المفتوحة، تحديد المواقع الجغرافية، وفحص الحسابات.")
+
+# القائمة الجانبية (Sidebar)
+st.sidebar.title("🗂️ سجل العمليات")
+if st.sidebar.button("مسح السجل بالكامل"):
+    conn = sqlite3.connect('osint_master.db')
+    conn.execute('DELETE FROM searches')
+    conn.commit()
     conn.close()
-    return df
+    st.sidebar.success("تم مسح السجل!")
 
-# --- 2. دالة رفع الصورة تلقائياً من التليفون ---
-def upload_image_to_imgbb(uploaded_file):
-    api_key = "6d702677d167013ac92e1069b2d35442"
-    url = "https://api.imgbb.com/1/upload"
-    base64_image = base64.b64encode(uploaded_file.getvalue()).decode('utf-8')
-    payload = {
-        "key": api_key,
-        "image": base64_image
-    }
-    res = requests.post(url, data=payload)
-    if res.status_code == 200:
-        return res.json()["data"]["url"]
-    else:
-        raise Exception("فشل رفع الصورة من التليفون.")
+conn = sqlite3.connect('osint_master.db')
+cursor = conn.cursor()
+cursor.execute('SELECT query_type, query_value, timestamp FROM searches ORDER BY id DESC LIMIT 10')
+history = cursor.fetchall()
+conn.close()
 
-# --- 3. محرك تحريك الوجه والشفاه (D-ID Engine) ---
-def generate_talking_animated_character(image_url, script_text, voice_id, api_key):
-    # مسح المسافات الزائدة من المفتاح لتفادي خطأ Forbidden
-    clean_api_key = api_key.strip()
-    
-    url = "https://api.d-id.com/talks"
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "authorization": f"Basic {clean_api_key}"
-    }
-    
-    payload = {
-        "script": {
-            "type": "text",
-            "subtitles": "false",
-            "provider": {
-                "type": "microsoft",
-                "voice_id": voice_id
-            },
-            "input": script_text
-        },
-        "config": {
-            "fluent": "true",
-            "pad_audio": "0.0",
-            "stitch": True
-        },
-        "source_url": image_url
-    }
-    
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code not in [200, 201]:
-        raise Exception(f"خطأ من سيرفر التحريك: {response.text}")
-        
-    res_data = response.json()
-    talk_id = res_data.get("id")
-    status_url = f"https://api.d-id.com/talks/{talk_id}"
-    
-    # الانتظار حتى معالجة حركة الوجه والعينين
-    for _ in range(60):
-        time.sleep(3)
-        status_res = requests.get(status_url, headers=headers).json()
-        status = status_res.get("status")
-        
-        if status == "done":
-            return status_res.get("result_url")
-        elif status == "error":
-            raise Exception(f"فشل توليد التحريك: {status_res}")
-            
-    raise Exception("استغرق التحريك وقتاً أطول من المتوقع، أعد المحاولة.")
+for item in history:
+    st.sidebar.text(f"[{item[0]}] {item[1]}\n⏱️ {item[2]}")
 
-# --- 4. واجهة التطبيق الرئيسية ---
-st.title("🐒 استوديو تحريك شخصيات 'قردوش وعسيلة'")
-st.caption("إنتاج فيديوهات ناطقة ومتحركة بالذكاء الاصطناعي (تحريك العيون، الوجه، والشفاه بالدارجة)")
+# التبويبات الرئيسية (Tabs)
+tab1, tab2, tab3 = st.tabs([
+    "📍 تحديد موقع الرقم (Geo-Phone)", 
+    "🔎 البحث المعمق بالاسم والموقع", 
+    "👤 فحص الحسابات (Username)"
+])
 
-# القائمة الجانبية لإدخال المفتاح
-st.sidebar.header("🔑 إعدادات الخدمة")
-api_key_input = st.sidebar.text_input(
-    "D-ID API Key:", 
-    type="password",
-    help="ضع مفتاح D-ID الخاص بك هنا."
-)
-
-tab_create, tab_library = st.tabs(["🎬 إنشاء فيديو متحرك", "📁 أرشيف الفيديوهات"])
-
-with tab_create:
-    st.subheader("1️⃣ تحميل صور الشخصيات من التليفون (Galerie)")
+# ----- التبويب الأول: الرقم والخريطة -----
+with tab1:
+    st.subheader("📱 تحليل رقم الهاتف وتحديد موقعه الجغرافي")
+    phone_input = st.text_input("أدخل الرقم مع رمز الدولة (مثال: +212600000000 أو +33600000000):")
     
-    col_q, col_a = st.columns(2)
-    
-    with col_q:
-        st.markdown("### 🐒 شخصية قردوش")
-        file_qardoush = st.file_uploader("اختر صورة قردوش من التليفون:", type=["jpg", "jpeg", "png"], key="q_file")
-        url_qardoush_fallback = st.text_input("أو ضع رابط صورة قردوش:", value="https://i.ibb.co/L5QG7C9/qardoush-maroccan.jpg", key="q_url")
-        qardoush_voice = st.selectbox(
-            "صوت قردوش:",
-            ["صوت رجالي مغربي 🇲🇦 (Jamal)", "صوت رجالي فصيح 🇸🇦 (Hamed)"],
-            key="q_v"
-        )
-        
-    with col_a:
-        st.markdown("### 🦧 شخصية عسيلة")
-        file_aseela = st.file_uploader("اختر صورة عسيلة من التليفون:", type=["jpg", "jpeg", "png"], key="a_file")
-        url_aseela_fallback = st.text_input("أو ضع رابط صورة عسيلة:", value="https://i.ibb.co/V3Kx82M/aseela-maroccan.jpg", key="a_url")
-        aseela_voice = st.selectbox(
-            "صوت عسيلة:",
-            ["صوت نسائي مغربي 🇲🇦 (Mouna)", "صوت نسائي فصيح 🇸🇦 (Zariyah)"],
-            key="a_v"
-        )
-
-    st.markdown("---")
-    st.subheader("2️⃣ كتابة السيناريو والحوار بالدارجة")
-    
-    video_title = st.text_input("📌 عنوان المقطع:", value="حلقة جديدة: حكايات قردوش وعسيلة")
-    
-    col_s1, col_s2 = st.columns(2)
-    
-    with col_s1:
-        script_qardoush = st.text_area(
-            "💬 كلام قردوش بالدارجة:",
-            value="السلام عليكم أ با الحباب! اليوم خاصني نعود لكم على واحد الأسطورة كاين فـ الدرب... راه أسطورة فـ الحلاقة!",
-            height=120
-        )
-        
-    with col_s2:
-        script_aseela = st.text_area(
-            "💬 كلام عسيلة بالدارجة:",
-            value="ويلي أ قردوش! وياك ما عاوتاني مشيتي عنده وحسقتي ليه راسك؟ راه قلت ليك داك السيد كيزرب على بنادم!",
-            height=120
-        )
-
-    voice_map = {
-        "صوت رجالي مغربي 🇲🇦 (Jamal)": "ar-MA-JamalNeural",
-        "صوت نسائي مغربي 🇲🇦 (Mouna)": "ar-MA-MounaNeural",
-        "صوت رجالي فصيح 🇸🇦 (Hamed)": "ar-SA-HamedNeural",
-        "صوت نسائي فصيح 🇸🇦 (Zariyah)": "ar-SA-ZariyahNeural"
-    }
-
-    st.markdown("---")
-    st.subheader("3️⃣ اختيار الشخصية وبدء التوليد الحي")
-    
-    target_character = st.radio("اختر الشخصية التي تريد تحريكها في هذا المقطع:", ["قردوش", "عسيلة"], horizontal=True)
-    
-    if st.button("🚀 بدء توليد الفيديو الناطق والمتحرك (.mp4)", use_container_width=True):
-        if not api_key_input:
-            st.error("⚠️ يرجى إدخال D-ID API Key في القائمة الجانبية أولاً.")
+    if st.button("بدء تحليل الرقم والتحديد الميداني"):
+        if phone_input:
+            with st.spinner("جاري الاتصال بالأقمار الاصطناعية وقواعد بيانات التغطية..."):
+                details, lat, lon = check_phone_with_location(phone_input)
+                
+                if "error" in details:
+                    st.error(details["error"])
+                else:
+                    save_to_history("Phone Geo", phone_input, details)
+                    
+                    c1, c2 = st.columns([1, 1.2])
+                    with c1:
+                        st.success("تم تحليل بيانات الخط بنجاح!")
+                        st.json(details)
+                        st.download_button(
+                            label="📥 تحميل التقرير (JSON)",
+                            data=json.dumps(details, indent=4, ensure_ascii=False),
+                            file_name=f"report_phone_{phone_input}.json",
+                            mime="application/json"
+                        )
+                    with c2:
+                        st.subheader("🗺️ خريطة الموقع الجغرافي")
+                        if lat and lon:
+                            m = folium.Map(location=[lat, lon], zoom_start=6, tiles="CartoDB dark_matter")
+                            folium.Marker(
+                                [lat, lon],
+                                popup=f"الرقم: {phone_input}",
+                                tooltip=f"المنطقة: {details.get('الدولة / المنطقة')}",
+                                icon=folium.Icon(color="green", icon="phone", prefix="fa")
+                            ).add_to(m)
+                            st_folium(m, width=500, height=350)
+                        else:
+                            st.warning("تعذر تحديد الإحداثيات على الخريطة.")
         else:
-            with st.spinner("جاري معالجة الفيديو وتحريك الشخصية..."):
-                try:
-                    if target_character == "قردوش":
-                        char_name = "قردوش"
-                        script = script_qardoush
-                        voice = voice_map[qardoush_voice]
-                        if file_qardoush is not None:
-                            try:
-                                img_url = upload_image_to_imgbb(file_qardoush)
-                            except Exception:
-                                img_url = url_qardoush_fallback.strip()
-                        else:
-                            img_url = url_qardoush_fallback.strip()
-                    else:
-                        char_name = "عسيلة"
-                        script = script_aseela
-                        voice = voice_map[aseela_voice]
-                        if file_aseela is not None:
-                            try:
-                                img_url = upload_image_to_imgbb(file_aseela)
-                            except Exception:
-                                img_url = url_aseela_fallback.strip()
-                        else:
-                            img_url = url_aseela_fallback.strip()
-                        
-                    # توليد الفيديو الناطق
-                    final_video_url = generate_talking_animated_character(
-                        image_url=img_url,
-                        script_text=script,
-                        voice_id=voice,
-                        api_key=api_key_input
-                    )
-                    
-                    st.success(f"✨ تم إنتاج فيديو {char_name} بنجاح!")
-                    st.video(final_video_url)
-                    
-                    # حفظ المقطع في الأرشيف
-                    save_video_project(video_title, char_name, script, final_video_url)
-                    
-                except Exception as e:
-                    st.error(f"❌ حدث خطأ: {str(e)}")
+            st.warning("يرجى إدخال الرقم.")
 
-with tab_library:
-    st.subheader("📁 أرشيف الفيديوهات والمشاريع المسجلة")
-    df_videos = get_projects()
-    if not df_videos.empty:
-        st.dataframe(df_videos, use_container_width=True)
-    else:
-        st.info("لا توجد مشاريع مسجلة بعد في الأرشيف.")
+# ----- التبويب الثاني: البحث المعمق بالاسم والموقع -----
+with tab2:
+    st.subheader("🕵️‍♂️ البحث المعمق عن شخص بالاسم والموقع الجغرافي")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        p_name = st.text_input("اسم الشخص الكامل (مثال: أسامة العلمي):")
+    with col_b:
+        p_loc = st.text_input("الموقع أو المدينة (مثال: أكادير / أولاد تايمة):")
+        
+    if st.button("توليد استعلامات البحث المعمق"):
+        if p_name and p_loc:
+            with st.spinner("جاري صياغة خوارزميات البحث المتقدم..."):
+                res_deep = deep_person_search(p_name, p_loc)
+                save_to_history("Deep Search", f"{p_name} ({p_loc})", res_deep)
+                
+                st.success("تم إنشاء روابط وتراكيب البحث المتقدمة بنجاح!")
+                st.json(res_deep)
+                
+                st.info("💡 **تلميح:** يمكنك نسخ الاستعلامات أعلاه ووضعها فـ Google للحصول على أي أرقام أو مستندات مفتوحة للعموم.")
+        else:
+            st.error("المرجو إدخال الاسم والموقع معاً.")
+
+# ----- التبويب الثالث: فحص الحسابات -----
+with tab3:
+    st.subheader("👤 فحص اسم المستخدم عبر الشبكات الاجتماعية")
+    u_input = st.text_input("أدخل اسم المستخدم (Username):")
+    
+    if st.button("فحص المنصات العالمية"):
+        if u_input:
+            with st.spinner("جاري فحص الخوادم والمنصات..."):
+                u_res = check_username(u_input)
+                save_to_history("Username", u_input, u_res)
+                
+                st.success("تم الفحص بنجاح!")
+                cols = st.columns(2)
+                idx = 0
+                for platform, val in u_res.items():
+                    with cols[idx % 2]:
+                        if val["status"] == "موجود ✅":
+                            st.markdown(f"🟢 **{platform}**: [زيارة الحساب]({val['url']})")
+                        else:
+                            st.markdown(f"🔴 **{platform}**: غير موجود")
+                    idx += 1
+        else:
+            st.warning("يرجى إدخال اسم المستخدم.")
