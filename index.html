@@ -3,352 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEC-CHECK | أداة التدقيق الجنائي وتقارير الأمان</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <title>منصة توليد الفيديوهات بالذكاء الاصطناعي AI Video Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0a0f1d;
-            --card-bg: rgba(15, 23, 42, 0.85);
-            --primary-emerald: #10b981;
-            --primary-glow: rgba(16, 185, 129, 0.35);
-            --danger-red: #ef4444;
-            --danger-glow: rgba(239, 68, 68, 0.35);
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --terminal-bg: #030712;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.1);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 1.5rem;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.05) 0%, transparent 40%);
+            align-items: center;
+            padding: 2rem;
         }
-
         .container {
-            max-width: 850px;
-            margin: 0 auto;
+            max-width: 700px;
             width: 100%;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--text-main);
-        }
-
-        .logo span { color: var(--primary-emerald); }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-top: 5px;
-        }
-
-        .card {
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 1.8rem;
+            padding: 2.5rem;
             backdrop-filter: blur(12px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            margin-bottom: 2rem;
+            text-align: center;
         }
-
-        .form-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 1rem;
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #fff; }
+        p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+        
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            background: rgba(15, 23, 42, 0.4);
         }
-
-        input {
-            flex: 1;
-            padding: 0.9rem 1.2rem;
-            background: var(--terminal-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
+        .upload-box:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .upload-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        
+        input[type="file"] { display: none; }
+        
+        .btn-generate {
+            background: var(--primary);
             color: #fff;
-            font-size: 1.05rem;
-            outline: none;
-            direction: ltr;
-            text-align: left;
-            font-family: 'Fira Code', monospace;
-        }
-
-        input:focus {
-            border-color: var(--primary-emerald);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .btn {
-            background: var(--primary-emerald);
-            color: #000;
             font-weight: 700;
-            padding: 0.9rem 1.8rem;
+            padding: 0.9rem 2rem;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            width: 100%;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--primary-glow);
         }
-
-        .btn:hover {
+        .btn-generate:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px var(--primary-glow);
+            opacity: 0.9;
         }
-
-        /* Scan Details Panel */
-        .report-panel {
+        .loading {
             display: none;
             margin-top: 1.5rem;
-            border: 1px solid var(--danger-red);
-            background: rgba(239, 68, 68, 0.08);
-            border-radius: 12px;
-            padding: 1.5rem;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(239, 68, 68, 0.2);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .status-badge {
-            background: var(--danger-red);
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
+            color: var(--primary);
             font-weight: bold;
-        }
-
-        .detail-row {
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .detail-row strong {
-            color: #fca5a5;
-        }
-
-        .file-tag {
-            background: rgba(0,0,0,0.4);
-            border: 1px dashed #ef4444;
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-family: 'Fira Code', monospace;
-            color: #f87171;
-            font-size: 0.85rem;
-            display: inline-block;
-            direction: ltr;
-        }
-
-        .actions-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-pdf {
-            background: #3b82f6;
-            color: #fff;
-            flex: 1;
-        }
-
-        .btn-wa {
-            background: #25d366;
-            color: #000;
-            flex: 1;
-            text-decoration: none;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            border-radius: 10px;
-        }
-
-        footer {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-top: auto;
-            padding-top: 2rem;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <div class="logo">🛡️ SEC<span>CHECK</span> Audit</div>
-            <div class="subtitle">نظام توليد تقارير الأمان والتدقيق الجنائي للمستشارين الأمنيّين</div>
-        </header>
+        <h1>مولد الفيديو بالذكاء الاصطناعي 🎬</h1>
+        <p>ارفع صورتك أو الفيديو الخاص بك، ودع الذكاء الاصطناعي ينتج لك محتوى مذهلاً مطابقاً.</p>
 
-        <main>
-            <div class="card">
-                <label style="font-weight: bold; color: var(--text-muted);">
-                    أدخل اسم المستخدم (Username) الخاص بالزبون:
-                </label>
-                <div class="form-group">
-                    <input type="text" id="targetUser" placeholder="e.g. client_username" autocomplete="off">
-                    <button class="btn" onclick="generateAudit()">توليد التقرير الأمني</button>
-                </div>
+        <label class="upload-box" for="mediaFile">
+            <div class="upload-icon">📁</div>
+            <div id="fileLabelText">اضغط هنا لرفع الصورة أو الفيديو (أو قم بالسحب والإفلات)</div>
+            <input type="file" id="mediaFile" accept="image/*,video/*" onchange="handleFileSelect(event)">
+        </label>
 
-                <!-- Report Details -->
-                <div class="report-panel" id="reportPanel">
-                    <div class="report-header">
-                        <span style="font-size: 1.1rem; font-weight: bold; color: var(--danger-red);">
-                            ⚠️ تقرير رصد التسريبات والمخاطر
-                        </span>
-                        <span class="status-badge">خطر مرتفع</span>
-                    </div>
+        <button class="btn-generate" onclick="startProcess()">بدء توليد الفيديو بالذكاء الاصطناعي</button>
 
-                    <div class="detail-row">
-                        <strong>المستهدف:</strong> <span id="resUser" style="color: #fff;">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>مصدر التسريب الأساسي:</strong> قواعد بيانات <span class="file-tag">Stripchat_2021_Dump.csv</span> والسجلات المفتوحة المؤرشفة.
-                    </div>
-                    <div class="detail-row">
-                        <strong>نوع البيانات المعرضة للانتهاك:</strong>
-                        <ul style="margin-right: 20px; color: var(--text-muted); margin-top: 5px;">
-                            <li>أسماء المستخدمين وتواريخ التسجيل العامة (User Identity logs).</li>
-                            <li>عناوين شبكة الإنترنت ومؤشرات النطاق (IP/Session footprints).</li>
-                            <li>قابليته لهجمات التخمين المتقاطع (Credential Stuffing).</li>
-                        </ul>
-                    </div>
-                    <div class="detail-row">
-                        <strong>الملف المرجعي المؤرشف:</strong> <span class="file-tag">OSINT_LEAKS_ARCHIVE_2021_04.LOG</span>
-                    </div>
-
-                    <div class="actions-group">
-                        <button class="btn btn-pdf" onclick="exportPDF()">📄 تحميل تقرير PDF للزبون</button>
-                        <a href="#" id="waLink" class="btn-wa" target="_blank">💬 إرسال التقرير عبر الواتساب</a>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <footer>
-            SEC-CHECK Security System - أداة تدقيق وإعداد تقارير الأمان والتوعية الرقمية.
-        </footer>
+        <div class="loading" id="loadingText">جاري معالجة الملف عبر خوادم الذكاء الاصطناعي، يرجى الانتظار...</div>
     </div>
 
     <script>
-        const myPhone = "212600000000"; // 👈 ضع رقم هاتفك هنا مع رمز الدولة بدون +
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('fileLabelText').innerText = `تم اختيار الملف: ${file.name}`;
+            }
+        }
 
-        function generateAudit() {
-            const user = document.getElementById('targetUser').value.trim();
-            if(!user) {
-                alert("المرجو إدخال اسم المستخدم أولاً!");
+        function startProcess() {
+            const fileInput = document.getElementById('mediaFile');
+            if (fileInput.files.length === 0) {
+                alert("المرجو رفع ملف (صورة أو فيديو) أولاً!");
                 return;
             }
 
-            document.getElementById('resUser').innerText = `@${user}`;
-            document.getElementById('reportPanel').style.display = 'block';
+            document.getElementById('loadingText').style.display = 'block';
 
-            // إعداد رابط الواتساب الجاهز
-            const waMsg = encodeURIComponent(
-                `السلام عليكم، قمت بإجراء فحص تدقيقي لاسم المستخدم الخاص بك (@${user}) في قواعد بيانات الأمان والتسريبات التاريخية (Stripchat 2021 & OSINT Logs).\n\n` +
-                `⚠️ نتيجة الفحص: حسابك مسجل ضمن السجلات المكشوفة ويحتاج لتأمين فوري ضد هجمات التخمين والاختراق.\n\n` +
-                `أرسلت لك تقرير التدقيق، هل تود البدء في تطبيق خطوات الحماية الآن؟`
-            );
-            document.getElementById('waLink').href = `https://wa.me/${myPhone}?text=${waMsg}`;
-        }
-
-        function exportPDF() {
-            const user = document.getElementById('targetUser').value.trim();
-            const today = new Date().toLocaleDateString('ar-MA');
-
-            const printWin = window.open('', '_blank');
-            printWin.document.write(`
-                <html lang="ar" dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>تقرير أمني - ${user}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 30px; color: #111; background: #fff; line-height: 1.6; }
-                        .header { border-bottom: 2px solid #ef4444; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-                        .title { font-size: 22px; font-weight: bold; color: #ef4444; }
-                        .box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-                        .tag { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 13px; }
-                        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="title">🛡️ تقرير التدقيق الجنائي والأمان السيبراني</div>
-                        <div>التاريخ: ${today}</div>
-                    </div>
-
-                    <div class="box">
-                        <h3>1. بيانات الهدف المصرح بها</h3>
-                        <p><strong>اسم المستخدم المعني:</strong> @${user}</p>
-                        <p><strong>حالة التقييم:</strong> <span class="tag">⚠️ معرض للمخاطر (High Risk)</span></p>
-                    </div>
-
-                    <div class="box">
-                        <h3>2. تفاصيل التسريب والمصادر المكشوفة</h3>
-                        <p>أظهرت نتائج تتبع الأثر الرقمي (OSINT) تطابق اسم المستخدم مع سجلات البيانات السابقة:</p>
-                        <ul>
-                            <li><strong>المصدر المفحوص:</strong> قواعد بيانات Stripchat 2021 والتدقيق المفتوح.</li>
-                            <li><strong>الملف المرجعي:</strong> <span class="tag">Stripchat_2021_Dump.csv / OSINT_LOGS.LOG</span></li>
-                            <li><strong>البيانات المتأثرة:</strong> الهوية الرقمية، معلمات الجلسات، والسجلات العامة المؤرشفة.</li>
-                        </ul>
-                    </div>
-
-                    <div class="box">
-                        <h3>3. إجراءات التأمين الموصى بها فوراً</h3>
-                        <ol>
-                            <li>تحديث وتغيير جميع كلمات المرور المرتبطة بنفس اسم المستخدم.</li>
-                            <li>تفعيل خيار المصادقة الثنائية (2FA) لمنع عمليات التخمين والوصول غير المصرح به.</li>
-                            <li>إجراء تدقيق كامل لحماية الحسابات والمواقع الشخصية.</li>
-                        </ol>
-                    </div>
-
-                    <div class="footer">
-                        تم إصدار هذا التقرير رسمياً لأغراض التوعية والتأمين التقني بواسطة مستشار الأمان السيبراني.
-                    </div>
-
-                    <script>
-                        window.onload = function() { window.print(); }
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWin.document.close();
+            // هنا يتم إرسال الملف إلى الخلفية (Backend) أو الـ API لمعالجته
+            setTimeout(() => {
+                document.getElementById('loadingText').style.display = 'none';
+                alert("تم محاكاة المعالجة بنجاح! لربطها بـ API حقيقي، قم بربط السيرفر بخدمات مثل Replicate أو Fal.ai.");
+            }, 3000);
         }
     </script>
 </body>
