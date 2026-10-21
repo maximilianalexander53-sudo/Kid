@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فاحص التسريبات والأمان السيبراني | Security Checker</title>
+    <title>SEC-CHECK | أداة التدقيق الجنائي وتقارير الأمان</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #0a0f1d;
-            --card-bg: rgba(15, 23, 42, 0.75);
+            --card-bg: rgba(15, 23, 42, 0.85);
             --primary-emerald: #10b981;
             --primary-glow: rgba(16, 185, 129, 0.35);
             --danger-red: #ef4444;
@@ -32,439 +32,323 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            padding: 1.5rem;
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+                radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.05) 0%, transparent 40%);
         }
 
-        /* Animated Grid Overlay */
-        .bg-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            z-index: -1;
-            pointer-events: none;
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         header {
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-            background: rgba(10, 15, 29, 0.8);
-            position: sticky;
-            top: 0;
-            z-index: 50;
         }
 
         .logo {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: 900;
             color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .logo span {
-            color: var(--primary-emerald);
-        }
+        .logo span { color: var(--primary-emerald); }
 
-        .logo-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--primary-emerald);
-            border: 1px solid var(--primary-emerald);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-family: 'Fira Code', monospace;
-        }
-
-        main {
-            flex: 1;
-            max-width: 900px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 3rem 1.5rem;
-        }
-
-        .hero-section {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .hero-title {
-            font-size: 2.2rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            line-height: 1.3;
-        }
-
-        .hero-subtitle {
+        .subtitle {
             color: var(--text-muted);
-            font-size: 1.05rem;
-            max-width: 650px;
-            margin: 0 auto;
-            line-height: 1.6;
+            font-size: 0.95rem;
+            margin-top: 5px;
         }
 
-        /* Checker Box */
-        .checker-card {
+        .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.8rem;
             backdrop-filter: blur(12px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            margin-bottom: 2.5rem;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
         }
 
-        .checker-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-emerald), transparent);
-        }
-
-        .input-group {
+        .form-group {
             display: flex;
             gap: 10px;
-            margin-top: 1.5rem;
-            position: relative;
+            margin-top: 1rem;
         }
 
-        .input-wrapper {
-            position: relative;
+        input {
             flex: 1;
-        }
-
-        .input-wrapper input {
-            width: 100%;
-            padding: 1rem 1.2rem;
-            background: rgba(3, 7, 18, 0.8);
+            padding: 0.9rem 1.2rem;
+            background: var(--terminal-bg);
             border: 1px solid var(--border-color);
             border-radius: 10px;
             color: #fff;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             outline: none;
-            transition: all 0.3s ease;
             direction: ltr;
             text-align: left;
             font-family: 'Fira Code', monospace;
         }
 
-        .input-wrapper input:focus {
+        input:focus {
             border-color: var(--primary-emerald);
             box-shadow: 0 0 15px var(--primary-glow);
         }
 
-        .btn-scan {
+        .btn {
             background: var(--primary-emerald);
             color: #000;
             font-weight: 700;
-            padding: 1rem 2rem;
+            padding: 0.9rem 1.8rem;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1.05rem;
+            font-size: 1rem;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
         }
 
-        .btn-scan:hover {
+        .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px var(--primary-glow);
         }
 
-        /* Terminal Simulation */
-        .terminal-box {
+        /* Scan Details Panel */
+        .report-panel {
             display: none;
-            background: var(--terminal-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1.2rem;
             margin-top: 1.5rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            color: #10b981;
-            direction: ltr;
-            text-align: left;
-            max-height: 180px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .terminal-line {
-            margin-bottom: 6px;
-            opacity: 0;
-            animation: fadeIn 0.2s forwards;
+            border: 1px solid var(--danger-red);
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            animation: fadeIn 0.4s ease;
         }
 
         @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        /* Results Display */
-        .result-box {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: right;
-            animation: slideUp 0.4s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .result-leaked {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--danger-red);
-        }
-
-        .result-header {
+        .report-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
-        .result-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--danger-red);
+        .status-badge {
+            background: var(--danger-red);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
         }
 
-        .result-details {
-            color: var(--text-muted);
+        .detail-row {
+            margin-bottom: 12px;
             font-size: 0.95rem;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
 
-        .cta-whatsapp {
-            display: inline-flex;
-            align-items: center;
+        .detail-row strong {
+            color: #fca5a5;
+        }
+
+        .file-tag {
+            background: rgba(0,0,0,0.4);
+            border: 1px dashed #ef4444;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            color: #f87171;
+            font-size: 0.85rem;
+            display: inline-block;
+            direction: ltr;
+        }
+
+        .actions-group {
+            display: flex;
             gap: 10px;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-pdf {
+            background: #3b82f6;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-wa {
             background: #25d366;
             color: #000;
-            font-weight: 700;
-            padding: 0.9rem 1.8rem;
-            border-radius: 10px;
+            flex: 1;
             text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .cta-whatsapp:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
-        }
-
-        /* Features Section */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
-        }
-
-        .feature-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            border-color: var(--primary-emerald);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            color: var(--primary-emerald);
-        }
-
-        .feature-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .feature-desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.6;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 10px;
         }
 
         footer {
             text-align: center;
-            padding: 2rem;
-            border-top: 1px solid var(--border-color);
             color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 640px) {
-            .input-group {
-                flex-direction: column;
-            }
-            .btn-scan {
-                justify-content: center;
-            }
-            .hero-title {
-                font-size: 1.7rem;
-            }
+            font-size: 0.8rem;
+            margin-top: auto;
+            padding-top: 2rem;
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
+    <div class="container">
+        <header>
+            <div class="logo">🛡️ SEC<span>CHECK</span> Audit</div>
+            <div class="subtitle">نظام توليد تقارير الأمان والتدقيق الجنائي للمستشارين الأمنيّين</div>
+        </header>
 
-    <header>
-        <div class="logo">
-            🛡️ SEC<span>CHECK</span>
-            <span class="logo-badge">OSINT v2.4</span>
-        </div>
-    </header>
-
-    <main>
-        <section class="hero-section">
-            <h1 class="hero-title">فحص تسريب الحسابات والبيانات المفتوحة</h1>
-            <p class="hero-subtitle">
-                تحقق مما إذا كان اسم المستخدم الخاص بك قد ظهر في تسريبات قواعد البيانات العامة مثل (Stripchat 2021) أو السجلات المفتوحة لحماية خصوصيتك وحساباتك.
-            </p>
-        </section>
-
-        <section class="checker-card">
-            <label style="font-weight: 700; font-size: 0.95rem; color: var(--text-muted);">
-                أدخل اسم المستخدم (Username) المراد فحصه:
-            </label>
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <input type="text" id="usernameInput" placeholder="e.g. user123" autocomplete="off" spellcheck="false">
+        <main>
+            <div class="card">
+                <label style="font-weight: bold; color: var(--text-muted);">
+                    أدخل اسم المستخدم (Username) الخاص بالزبون:
+                </label>
+                <div class="form-group">
+                    <input type="text" id="targetUser" placeholder="e.g. client_username" autocomplete="off">
+                    <button class="btn" onclick="generateAudit()">توليد التقرير الأمني</button>
                 </div>
-                <button class="btn-scan" onclick="startScan()">
-                    <span>🔍</span> فحص الأمان
-                </button>
-            </div>
 
-            <div class="terminal-box" id="terminalBox"></div>
+                <!-- Report Details -->
+                <div class="report-panel" id="reportPanel">
+                    <div class="report-header">
+                        <span style="font-size: 1.1rem; font-weight: bold; color: var(--danger-red);">
+                            ⚠️ تقرير رصد التسريبات والمخاطر
+                        </span>
+                        <span class="status-badge">خطر مرتفع</span>
+                    </div>
 
-            <div class="result-box result-leaked" id="resultBox">
-                <div class="result-header">
-                    <span style="font-size: 1.5rem;">⚠️</span>
-                    <div class="result-title">تم العثور على أثر في قواعد البيانات المسربة!</div>
+                    <div class="detail-row">
+                        <strong>المستهدف:</strong> <span id="resUser" style="color: #fff;">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>مصدر التسريب الأساسي:</strong> قواعد بيانات <span class="file-tag">Stripchat_2021_Dump.csv</span> والسجلات المفتوحة المؤرشفة.
+                    </div>
+                    <div class="detail-row">
+                        <strong>نوع البيانات المعرضة للانتهاك:</strong>
+                        <ul style="margin-right: 20px; color: var(--text-muted); margin-top: 5px;">
+                            <li>أسماء المستخدمين وتواريخ التسجيل العامة (User Identity logs).</li>
+                            <li>عناوين شبكة الإنترنت ومؤشرات النطاق (IP/Session footprints).</li>
+                            <li>قابليته لهجمات التخمين المتقاطع (Credential Stuffing).</li>
+                        </ul>
+                    </div>
+                    <div class="detail-row">
+                        <strong>الملف المرجعي المؤرشف:</strong> <span class="file-tag">OSINT_LEAKS_ARCHIVE_2021_04.LOG</span>
+                    </div>
+
+                    <div class="actions-group">
+                        <button class="btn btn-pdf" onclick="exportPDF()">📄 تحميل تقرير PDF للزبون</button>
+                        <a href="#" id="waLink" class="btn-wa" target="_blank">💬 إرسال التقرير عبر الواتساب</a>
+                    </div>
                 </div>
-                <div class="result-details" id="resultDetails">
-                    اسم المستخدم هذا مسجل في سجلات تسريب قديمة عامة. ينصح بتأمين حساباتك فوراً وتغيير كلمات المرور المتشابهة لتجنب هجمات التخمين والاستهداف.
-                </div>
-                <a href="#" id="whatsappBtn" class="cta-whatsapp" target="_blank">
-                    💬 تواصل معنا لتأمين حسابك وموقعك الآن
-                </a>
             </div>
-        </section>
+        </main>
 
-        <section class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <div class="feature-title">تأمين الحسابات</div>
-                <div class="feature-desc">استشارات وتفعيل حماية شاملة ضد التخمين والتجسس الرقمي بجميع أنواعه.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔎</div>
-                <div class="feature-title">فحص المواقع (Web Audit)</div>
-                <div class="feature-desc">كشف الثغرات في موقعك التجاري وحمايته من تسريب بيانات الزبناء.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌐</div>
-                <div class="feature-title">تطوير تطبيقات آمنة</div>
-                <div class="feature-desc">برمجة وبناء مواقع إلكترونية متطورة ومحمية باحترافية عالية.</div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        تنبيه: هذا الموقع يقدم خدمات فحص وتقييم أمني بناءً على المصادر والمؤشرات المفتوحة (OSINT) لأغراض الحماية والتوعية الرقمية فقط.
-    </footer>
+        <footer>
+            SEC-CHECK Security System - أداة تدقيق وإعداد تقارير الأمان والتوعية الرقمية.
+        </footer>
+    </div>
 
     <script>
-        const phone = "212600000000"; // قم بتغيير هذا الرقم لرقم الواتساب الخاص بك
+        const myPhone = "212600000000"; // 👈 ضع رقم هاتفك هنا مع رمز الدولة بدون +
 
-        function startScan() {
-            const input = document.getElementById('usernameInput').value.trim();
-            const terminal = document.getElementById('terminalBox');
-            const resultBox = document.getElementById('resultBox');
-
-            if (!input) {
+        function generateAudit() {
+            const user = document.getElementById('targetUser').value.trim();
+            if(!user) {
                 alert("المرجو إدخال اسم المستخدم أولاً!");
                 return;
             }
 
-            resultBox.style.display = 'none';
-            terminal.style.display = 'block';
-            terminal.innerHTML = '';
+            document.getElementById('resUser').innerText = `@${user}`;
+            document.getElementById('reportPanel').style.display = 'block';
 
-            const logs = [
-                `[INFO] Target Username: "${input}"`,
-                `[+] Connecting to OSINT Breach Database...`,
-                `[+] Querying Stripchat 2021 Leak Sinks...`,
-                `[+] Searching public credentials repositories...`,
-                `[!] Matches found in indexed data logs.`
-            ];
-
-            let delay = 0;
-            logs.forEach((log, index) => {
-                setTimeout(() => {
-                    const line = document.createElement('div');
-                    line.className = 'terminal-line';
-                    line.innerText = log;
-                    terminal.appendChild(line);
-                    terminal.scrollTop = terminal.scrollHeight;
-
-                    if (index === logs.length - 1) {
-                        setTimeout(() => {
-                            showResult(input);
-                        }, 600);
-                    }
-                }, delay);
-                delay += 500;
-            });
+            // إعداد رابط الواتساب الجاهز
+            const waMsg = encodeURIComponent(
+                `السلام عليكم، قمت بإجراء فحص تدقيقي لاسم المستخدم الخاص بك (@${user}) في قواعد بيانات الأمان والتسريبات التاريخية (Stripchat 2021 & OSINT Logs).\n\n` +
+                `⚠️ نتيجة الفحص: حسابك مسجل ضمن السجلات المكشوفة ويحتاج لتأمين فوري ضد هجمات التخمين والاختراق.\n\n` +
+                `أرسلت لك تقرير التدقيق، هل تود البدء في تطبيق خطوات الحماية الآن؟`
+            );
+            document.getElementById('waLink').href = `https://wa.me/${myPhone}?text=${waMsg}`;
         }
 
-        function showResult(username) {
-            const resultBox = document.getElementById('resultBox');
-            const whatsappBtn = document.getElementById('whatsappBtn');
-            const resultDetails = document.getElementById('resultDetails');
+        function exportPDF() {
+            const user = document.getElementById('targetUser').value.trim();
+            const today = new Date().toLocaleDateString('ar-MA');
 
-            resultDetails.innerHTML = `اسم المستخدم <strong>"${username}"</strong> يظهر ضمن السجلات العامة المتأثرة بالتسريبات السابقة. لضمان سلامة خصوصيتك وعدم استغلال معلوماتك، ننصحك بتأمين حساباتك وإغلاق منافذ التخمين.`;
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير أمني - ${user}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 30px; color: #111; background: #fff; line-height: 1.6; }
+                        .header { border-bottom: 2px solid #ef4444; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                        .title { font-size: 22px; font-weight: bold; color: #ef4444; }
+                        .box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                        .tag { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="title">🛡️ تقرير التدقيق الجنائي والأمان السيبراني</div>
+                        <div>التاريخ: ${today}</div>
+                    </div>
 
-            const message = encodeURIComponent(`مرحباً، قمت بفحص اسم المستخدم (${username}) في موقعك وظهرت لي تنبيهات أمان. أريد استشارة لتأمين حساباتي/موقعي.`);
-            whatsappBtn.href = `https://wa.me/${phone}?text=${message}`;
+                    <div class="box">
+                        <h3>1. بيانات الهدف المصرح بها</h3>
+                        <p><strong>اسم المستخدم المعني:</strong> @${user}</p>
+                        <p><strong>حالة التقييم:</strong> <span class="tag">⚠️ معرض للمخاطر (High Risk)</span></p>
+                    </div>
 
-            resultBox.style.display = 'block';
+                    <div class="box">
+                        <h3>2. تفاصيل التسريب والمصادر المكشوفة</h3>
+                        <p>أظهرت نتائج تتبع الأثر الرقمي (OSINT) تطابق اسم المستخدم مع سجلات البيانات السابقة:</p>
+                        <ul>
+                            <li><strong>المصدر المفحوص:</strong> قواعد بيانات Stripchat 2021 والتدقيق المفتوح.</li>
+                            <li><strong>الملف المرجعي:</strong> <span class="tag">Stripchat_2021_Dump.csv / OSINT_LOGS.LOG</span></li>
+                            <li><strong>البيانات المتأثرة:</strong> الهوية الرقمية، معلمات الجلسات، والسجلات العامة المؤرشفة.</li>
+                        </ul>
+                    </div>
+
+                    <div class="box">
+                        <h3>3. إجراءات التأمين الموصى بها فوراً</h3>
+                        <ol>
+                            <li>تحديث وتغيير جميع كلمات المرور المرتبطة بنفس اسم المستخدم.</li>
+                            <li>تفعيل خيار المصادقة الثنائية (2FA) لمنع عمليات التخمين والوصول غير المصرح به.</li>
+                            <li>إجراء تدقيق كامل لحماية الحسابات والمواقع الشخصية.</li>
+                        </ol>
+                    </div>
+
+                    <div class="footer">
+                        تم إصدار هذا التقرير رسمياً لأغراض التوعية والتأمين التقني بواسطة مستشار الأمان السيبراني.
+                    </div>
+
+                    <script>
+                        window.onload = function() { window.print(); }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
         }
     </script>
 </body>
