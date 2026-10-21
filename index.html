@@ -3,27 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAP-AI | منصة تبديل الوجوه والفيديوهات بالذكاء الاصطناعي</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <title>LOAD-MEDIA | أداة تحميل الفيديوهات مجاناً</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #070913;
             --card-bg: rgba(15, 23, 42, 0.75);
-            --accent-purple: #8b5cf6;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.35);
             --accent-blue: #3b82f6;
-            --accent-pink: #ec4899;
-            --glow-purple: rgba(139, 92, 246, 0.35);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border-color: rgba(255, 255, 255, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
 
         body {
             background-color: var(--bg-dark);
@@ -31,24 +25,9 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
-                radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.1) 0%, transparent 45%);
-        }
-
-        .bg-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-size: 50px 50px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            z-index: -1;
-            pointer-events: none;
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
         }
 
         header {
@@ -57,223 +36,85 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(12px);
             background: rgba(7, 9, 19, 0.85);
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            backdrop-filter: blur(12px);
         }
 
-        .logo {
-            font-size: 1.4rem;
-            font-weight: 900;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 1px;
-        }
-
-        .logo span {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .badge-pro {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
-            border: 1px solid var(--accent-purple);
-            color: #d8b4fe;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 700;
-        }
+        .logo { font-size: 1.4rem; font-weight: 900; color: var(--text-main); }
+        .logo span { color: var(--primary); }
 
         main {
             flex: 1;
-            max-width: 850px;
+            max-width: 800px;
             width: 100%;
             margin: 0 auto;
-            padding: 2rem 1.2rem;
+            padding: 2.5rem 1.2rem;
         }
 
-        .hero-section {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
+        .hero { text-align: center; margin-bottom: 2.5rem; }
+        .hero h1 { font-size: 2.1rem; font-weight: 900; margin-bottom: 0.8rem; }
+        .hero p { color: var(--text-muted); font-size: 0.95rem; }
 
-        .hero-title {
-            font-size: 2.1rem;
-            font-weight: 900;
-            margin-bottom: 0.8rem;
-            line-height: 1.3;
-            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-title span {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        /* App Studio Container */
-        .studio-card {
+        .downloader-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            padding: 1.8rem;
+            padding: 2rem;
             backdrop-filter: blur(16px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            margin-bottom: 2.5rem;
-            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
         }
 
-        .studio-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 15%; right: 15%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
-        }
-
-        .upload-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .upload-box {
-            background: rgba(3, 7, 18, 0.6);
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            padding: 1.5rem 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            min-height: 180px;
+        .input-group {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .upload-box:hover {
-            border-color: var(--accent-purple);
-            background: rgba(139, 92, 246, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .upload-icon {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 0 10px var(--glow-purple));
-        }
-
-        .upload-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: var(--text-main);
-        }
-
-        .upload-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .preview-media {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px;
-            position: absolute;
-            top: 0; left: 0;
-            display: none;
-        }
-
-        /* Action Button */
-        .btn-swap {
-            width: 100%;
-            background: linear-gradient(135deg, var(--accent-purple), #6366f1);
-            color: #fff;
-            font-weight: 700;
-            padding: 1.1rem;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px -5px var(--glow-purple);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 10px;
+            margin-top: 1rem;
         }
 
-        .btn-swap:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.5);
-            opacity: 0.95;
-        }
-
-        /* Progress Bar */
-        .progress-box {
-            display: none;
-            margin-top: 1.5rem;
+        .input-group input {
+            flex: 1;
+            padding: 1rem;
             background: rgba(3, 7, 18, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 1.2rem;
-            text-align: center;
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
-            transition: width 0.3s ease;
-        }
-
-        .progress-status {
-            font-size: 0.85rem;
-            color: var(--accent-purple);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            direction: ltr;
+            text-align: left;
             font-family: 'Fira Code', monospace;
         }
 
-        /* Output Video Result */
-        .result-box {
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-fetch {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            padding: 1rem 1.8rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .btn-fetch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--primary-glow);
+        }
+
+        /* Result Section */
+        .result-card {
             display: none;
             margin-top: 2rem;
             padding-top: 1.5rem;
             border-top: 1px solid var(--border-color);
-            text-align: center;
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.4s ease;
         }
 
         @keyframes fadeIn {
@@ -281,276 +122,141 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .result-video-wrapper {
-            position: relative;
-            width: 100%;
-            max-height: 420px;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--accent-purple);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
-            margin-top: 1rem;
+        .media-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            background: rgba(3, 7, 18, 0.5);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .media-thumb {
+            width: 110px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
             background: #000;
         }
 
-        video {
-            width: 100%;
-            max-height: 420px;
-            display: block;
-        }
+        .media-details h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; }
+        .media-details p { font-size: 0.8rem; color: var(--text-muted); }
 
-        .btn-download {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            font-weight: 700;
-            padding: 0.9rem 1.8rem;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 1.2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Features Cards */
-        .features-grid {
+        .formats-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.2rem;
+            gap: 10px;
         }
 
-        .feature-card {
-            background: var(--card-bg);
+        .format-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 12px 16px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
-            padding: 1.4rem;
-            border-radius: 14px;
+        }
+
+        .format-quality { font-weight: bold; font-size: 0.9rem; }
+
+        .btn-dl {
+            background: var(--accent-blue);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: bold;
             transition: all 0.3s ease;
         }
 
-        .feature-card:hover {
-            border-color: var(--accent-purple);
-            transform: translateY(-4px);
-        }
+        .btn-dl:hover { opacity: 0.9; transform: scale(1.03); }
 
-        .feature-icon {
-            font-size: 1.8rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .feature-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-        }
-
-        .feature-desc {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            line-height: 1.5;
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--primary);
+            font-weight: bold;
         }
 
         footer {
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 1.5rem;
             border-top: 1px solid var(--border-color);
             color: var(--text-muted);
             font-size: 0.85rem;
             margin-top: auto;
         }
 
-        @media (max-width: 640px) {
-            .upload-grid {
-                grid-template-columns: 1fr;
-            }
-            .hero-title {
-                font-size: 1.6rem;
-            }
-            .studio-card {
-                padding: 1.2rem;
-            }
+        @media (max-width: 600px) {
+            .input-group { flex-direction: column; }
+            .btn-fetch { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-
     <header>
-        <div class="logo">
-            🎬 SWAP<span>AI</span>
-            <span class="badge-pro">PRO STUDIO</span>
-        </div>
+        <div class="logo">📥 LOAD<span>MEDIA</span></div>
     </header>
 
     <main>
-        <section class="hero-section">
-            <h1 class="hero-title">ضع وجهك في أي <span>فيديو تريند</span> بالذكاء الاصطناعي</h1>
-            <p class="hero-subtitle">
-                قم برفع فيديو التريند المفضل لديك وصورتك الشخصية، واستمتع بنتيجة مذهلة فائقة الدقة خلال ثوانٍ معدودة.
-            </p>
+        <section class="hero">
+            <h1>تحميل الفيديوهات من أي موقع مجاناً</h1>
+            <p>ضع رابط الفيديو من يوتيوب، تيك توك، فيسبوك أو إنستغرام وابدأ التنزيل مباشرة</p>
         </section>
 
-        <section class="studio-card">
-            <div class="upload-grid">
-                <!-- Video Upload Box -->
-                <label class="upload-box" for="videoFile">
-                    <div class="upload-icon">🎥</div>
-                    <div class="upload-title" id="videoTitle">1. فيديو التريند</div>
-                    <div class="upload-desc" id="videoDesc">انقر لرفع فيديو (MP4, MOV)</div>
-                    <input type="file" id="videoFile" accept="video/*" onchange="handleVideoUpload(event)">
-                </label>
-
-                <!-- Image Upload Box -->
-                <label class="upload-box" for="imageFile">
-                    <div class="upload-icon">🖼️</div>
-                    <div class="upload-title" id="imageTitle">2. صورتك الشخصية</div>
-                    <div class="upload-desc" id="imageDesc">انقر لرفع صورة وجهك (JPG, PNG)</div>
-                    <input type="file" id="imageFile" accept="image/*" onchange="handleImageUpload(event)">
-                </label>
+        <section class="downloader-card">
+            <label style="font-weight: 700; font-size: 0.9rem; color: var(--text-muted);">
+                أدخل رابط الفيديو (Video URL):
+            </label>
+            <div class="input-group">
+                <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                <button class="btn-fetch" onclick="fetchVideo()">جلب الروابط 🔍</button>
             </div>
 
-            <button class="btn-swap" onclick="startAiProcess()">
-                <span>✨</span> بدء معالجة وتوليد الفيديو
-            </button>
+            <div class="loader" id="loader">⚡ جاري تحليل الفيديو واستخراج جودات التنزيل...</div>
 
-            <!-- Progress Indicator -->
-            <div class="progress-box" id="progressBox">
-                <div class="progress-status" id="progressStatus">جاري تحميل الملفات ومسح ملامح الوجه...</div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progressBarFill"></div>
-                </div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);" id="progressPercent">0%</div>
-            </div>
-
-            <!-- Output Result Section -->
-            <div class="result-box" id="resultBox">
-                <h3 style="color: #10b981; font-size: 1.2rem; font-weight: 700;">🎉 اكتملت المعالجة بنجاح!</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">إليك الفيديو الخاص بك بعد استبدال الوجه بالذكاء الاصطناعي:</p>
-                
-                <div class="result-video-wrapper">
-                    <video id="outputVideo" controls poster="https://via.placeholder.com/800x450/0f172a/ffffff?text=Video+Ready"></video>
+            <!-- Download Formats Result -->
+            <div class="result-card" id="resultCard">
+                <div class="media-info">
+                    <img id="videoThumb" class="media-thumb" src="" alt="Thumbnail">
+                    <div class="media-details">
+                        <h4 id="videoTitle">عنوان الفيديو ينزل هنا</h4>
+                        <p id="videoSource">المصدر: Youtube</p>
+                    </div>
                 </div>
 
-                <a href="#" class="btn-download" id="downloadBtn" download="swap_ai_video.mp4">
-                    <span>⬇️</span> تحميل الفيديو عالي الدقة (HD)
-                </a>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <div class="feature-title">معالجة فائقة السرعة</div>
-                <div class="feature-desc">توليد مقاطع الفيديو في أسرع وقت مع الحفاظ على دقة الملامح والحركات الطبيعية.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎭</div>
-                <div class="feature-title">دمج دقيق للوجوه</div>
-                <div class="feature-desc">خوارزميات متطورة للتعرف على الإضاءة وتطابق إعوجاج الوجه وزوايا التصوير.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <div class="feature-title">خصوصية وأمان 100%</div>
-                <div class="feature-desc">يتم مسح كافة الصور والفيديوهات المرفوعة تلقائياً من خوادمنا فور اكتمال التوليد.</div>
+                <div class="formats-list" id="formatsList">
+                    <!-- الخيارات ستولد تلقائياً -->
+                </div>
             </div>
         </section>
     </main>
 
     <footer>
-        © 2026 SWAP-AI Studio. جميع الحقوق محفوظة - منصة توليد الوسائط الرقمية.
+        © 2026 LOAD-MEDIA - أداة تحميل الوسائط الرقمية.
     </footer>
 
     <script>
-        let uploadedVideo = null;
-        let uploadedImage = null;
+        function fetchVideo() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const loader = document.getElementById('loader');
+            const resultCard = document.getElementById('resultCard');
 
-        function handleVideoUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                uploadedVideo = file;
-                document.getElementById('videoTitle').innerText = "✅ تم اختيار الفيديو";
-                document.getElementById('videoDesc').innerText = file.name.substring(0, 20) + "...";
-            }
-        }
-
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                uploadedImage = file;
-                document.getElementById('imageTitle').innerText = "✅ تم اختيار الصورة";
-                document.getElementById('imageDesc').innerText = file.name.substring(0, 20) + "...";
-            }
-        }
-
-        function startAiProcess() {
-            if (!uploadedVideo || !uploadedImage) {
-                alert("المرجو رفع فيديو التريند وصورتك الشخصية معاً قبل بدء التوليد!");
+            if (!url) {
+                alert("المرجو إدخال رابط الفيديو أولاً!");
                 return;
             }
 
-            const progressBox = document.getElementById('progressBox');
-            const resultBox = document.getElementById('resultBox');
-            const progressBarFill = document.getElementById('progressBarFill');
-            const progressStatus = document.getElementById('progressStatus');
-            const progressPercent = document.getElementById('progressPercent');
+            resultCard.style.display = 'none';
+            loader.style.display = 'block';
 
-            resultBox.style.display = 'none';
-            progressBox.style.display = 'block';
-
-            let progress = 0;
-            const steps = [
-                "جاري معالجة فيديو التريند واستخراج الإطارات...",
-                "جاري تحليل ملامح الوجه في الصورة الشخصية...",
-                "تطبيق خوارزميات DeepFace للدمج الضوئي...",
-                "إنشاء وتصدير الفيديو النهائي عالي الدقة..."
-            ];
-
-            const interval = setInterval(() => {
-                progress += 5;
-                progressBarFill.style.width = `${progress}%`;
-                progressPercent.innerText = `${progress}%`;
-
-                if (progress < 35) {
-                    progressStatus.innerText = steps[0];
-                } else if (progress < 65) {
-                    progressStatus.innerText = steps[1];
-                } else if (progress < 90) {
-                    progressStatus.innerText = steps[2];
-                } else {
-                    progressStatus.innerText = steps[3];
-                }
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        progressBox.style.display = 'none';
-                        showResults();
-                    }, 500);
-                }
-            }, 200);
-        }
-
-        function showResults() {
-            const resultBox = document.getElementById('resultBox');
-            const outputVideo = document.getElementById('outputVideo');
-            
-            // استخدام الفيديو المرفوع للزبون كعرض توضيحي للنتيجة
-            const videoUrl = URL.createObjectURL(uploadedVideo);
-            outputVideo.src = videoUrl;
-
-            resultBox.style.display = 'block';
-            resultBox.scrollIntoView({ behavior: 'smooth' });
-        }
-    </script>
-</body>
-</html>
+            // محاكاة الاتصال بالسيرفر واستخراج روابط التنزيل
+            setTimeout(() => {
+                loader.style.display = 'none';
+                
+                document.getElementById('videoTitle').innerText = "فيديو توضيحي لجودة الت
