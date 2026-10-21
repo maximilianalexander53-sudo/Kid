@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة توليد الفيديوهات بالذكاء الاصطناعي AI Video Generator</title>
+    <title>AI Video Face Swap | دمج الوجوه في الفيديوهات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-dark: #0a0f1d;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: rgba(255, 255, 255, 0.1);
@@ -26,100 +26,156 @@
             padding: 2rem;
         }
         .container {
-            max-width: 700px;
+            max-width: 750px;
             width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 2.5rem;
             backdrop-filter: blur(12px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #fff; }
-        p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; text-align: center; color: #fff; }
+        .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; text-align: center; }
         
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
         .upload-box {
             border: 2px dashed var(--border);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 1.5rem;
-            background: rgba(15, 23, 42, 0.4);
+            background: rgba(3, 7, 18, 0.5);
         }
         .upload-box:hover {
             border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
+            background: rgba(139, 92, 246, 0.05);
         }
-        .upload-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .upload-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .upload-label { font-size: 0.9rem; color: var(--text-muted); word-break: break-all; }
         
         input[type="file"] { display: none; }
         
         .btn-generate {
-            background: var(--primary);
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
             color: #fff;
             font-weight: 700;
-            padding: 0.9rem 2rem;
+            padding: 1rem 2rem;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             width: 100%;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px var(--primary-glow);
+            box-shadow: 0 4px 20px var(--primary-glow);
         }
         .btn-generate:hover {
             transform: translateY(-2px);
-            opacity: 0.9;
+            opacity: 0.95;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
         }
         .loading {
             display: none;
             margin-top: 1.5rem;
             color: var(--primary);
             font-weight: bold;
+            text-align: center;
+        }
+        video {
+            width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 600px) {
+            .upload-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>مولد الفيديو بالذكاء الاصطناعي 🎬</h1>
-        <p>ارفع صورتك أو الفيديو الخاص بك، ودع الذكاء الاصطناعي ينتج لك محتوى مذهلاً مطابقاً.</p>
+        <h1>تحويل الوجوه في الفيديوهات 🎬✨</h1>
+        <p class="subtitle">ضع صورتك واجعل نفسك مكان الشخص الموجود في فيديو التريند بضغطة زر!</p>
 
-        <label class="upload-box" for="mediaFile">
-            <div class="upload-icon">📁</div>
-            <div id="fileLabelText">اضغط هنا لرفع الصورة أو الفيديو (أو قم بالسحب والإفلات)</div>
-            <input type="file" id="mediaFile" accept="image/*,video/*" onchange="handleFileSelect(event)">
-        </label>
+        <div class="upload-grid">
+            <!-- رفع فيديو التريند -->
+            <label class="upload-box" for="videoFile">
+                <div class="upload-icon">🎥</div>
+                <div class="upload-label" id="videoText">اختر فيديو التريند (MP4)</div>
+                <input type="file" id="videoFile" accept="video/*" onchange="handleVideoSelect(event)">
+            </label>
 
-        <button class="btn-generate" onclick="startProcess()">بدء توليد الفيديو بالذكاء الاصطناعي</button>
+            <!-- رفع صورتك -->
+            <label class="upload-box" for="imageFile">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-label" id="imageText">اختر صورتك الشخصية (JPG/PNG)</div>
+                <input type="file" id="imageFile" accept="image/*" onchange="handleImageSelect(event)">
+            </label>
+        </div>
 
-        <div class="loading" id="loadingText">جاري معالجة الملف عبر خوادم الذكاء الاصطناعي، يرجى الانتظار...</div>
+        <button class="btn-generate" onclick="startFaceSwap()">بدء معالجة ودمج الوجه بالذكاء الاصطناعي</button>
+
+        <div class="loading" id="loadingDiv">🔄 جاري معالجة الفيديو وتبديل الوجوه عبر الخوادم، قد يستغرق ذلك دقيقة...</div>
+
+        <div class="result-section" id="resultSection">
+            <h3 style="color: #10b981; margin-bottom: 10px;">✅ تم توليد الفيديو بنجاح!</h3>
+            <video id="outputVideo" controls></video>
+        </div>
     </div>
 
     <script>
-        function handleFileSelect(event) {
+        function handleVideoSelect(event) {
             const file = event.target.files[0];
             if (file) {
-                document.getElementById('fileLabelText').innerText = `تم اختيار الملف: ${file.name}`;
+                document.getElementById('videoText').innerText = `تم اختيار الفيديو: ${file.name}`;
             }
         }
 
-        function startProcess() {
-            const fileInput = document.getElementById('mediaFile');
-            if (fileInput.files.length === 0) {
-                alert("المرجو رفع ملف (صورة أو فيديو) أولاً!");
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('imageText').innerText = `تم اختيار الصورة: ${file.name}`;
+            }
+        }
+
+        function startFaceSwap() {
+            const videoInput = document.getElementById('videoFile');
+            const imageInput = document.getElementById('imageFile');
+
+            if (videoInput.files.length === 0 || imageInput.files.length === 0) {
+                alert("المرجو اختيار فيديو التريند ورفع صورتك الشخصية معاً أولاً!");
                 return;
             }
 
-            document.getElementById('loadingText').style.display = 'block';
+            // إظهار رسالة التحميل
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
 
-            // هنا يتم إرسال الملف إلى الخلفية (Backend) أو الـ API لمعالجته
+            // محاكاة الاتصال بالـ Backend / API
             setTimeout(() => {
-                document.getElementById('loadingText').style.display = 'none';
-                alert("تم محاكاة المعالجة بنجاح! لربطها بـ API حقيقي، قم بربط السيرفر بخدمات مثل Replicate أو Fal.ai.");
-            }, 3000);
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'block';
+                // هنا يظهر رابط الفيديو الناتج من الـ API
+                // document.getElementById('outputVideo').src = response.video_url;
+                alert("تمت المحاكاة بنجاح! لكي يعمل الفيديو حقيقة، قم بربط هذا الزر بـ Backend (مثل Python Flask) يتصل بـ Replicate Face Swap API.");
+            }, 4000);
         }
     </script>
 </body>
