@@ -3,185 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIRATE_INTEL // VULNERABILITY & SEC-AUDIT ENGINE</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- html2pdf.js لتقارير PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.min.js"></script>
+    <title>فاحص التسريبات والأمان السيبراني | Security Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-dark: #0a0f1d;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --primary-emerald: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.35);
+            --danger-red: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.35);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --terminal-bg: #030712;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
         body {
-            background-color: #030712;
-            color: #10b981;
-            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
         }
-        .scanline {
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(16, 185, 129, 0.1) 50%, rgba(16, 185, 129, 0.1));
-            background-size: 100% 4px;
+
+        /* Animated Grid Overlay */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            z-index: -1;
+            pointer-events: none;
         }
-        .hud-border {
-            border: 1px solid #059669;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+
+        header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            background: rgba(10, 15, 29, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
-        .hud-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary-emerald);
+        }
+
+        .logo-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary-emerald);
+            border: 1px solid var(--primary-emerald);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        main {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Checker Box */
+        .checker-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .checker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-emerald), transparent);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 1.5rem;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: rgba(3, 7, 18, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            direction: ltr;
+            text-align: left;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-emerald);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-scan {
+            background: var(--primary-emerald);
+            color: #000;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--primary-glow);
+        }
+
+        /* Terminal Simulation */
+        .terminal-box {
+            display: none;
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-top: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #10b981;
+            direction: ltr;
+            text-align: left;
+            max-height: 180px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .terminal-line {
+            margin-bottom: 6px;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Results Display */
+        .result-box {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: right;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-leaked {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-red);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--danger-red);
+        }
+
+        .result-details {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-whatsapp {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #25d366;
+            color: #000;
+            font-weight: 700;
+            padding: 0.9rem 1.8rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .cta-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary-emerald);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--primary-emerald);
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+            .btn-scan {
+                justify-content: center;
+            }
+            .hero-title {
+                font-size: 1.7rem;
+            }
         }
     </style>
 </head>
-<body class="scanline min-h-screen pb-10">
+<body>
 
-    <!-- Header / Status Bar -->
-    <header class="hud-border hud-card m-3 p-4 rounded-lg flex flex-wrap justify-between items-center text-xs md:text-sm">
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <span class="inline-block w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
-            <span class="font-bold text-emerald-400 text-lg tracking-widest">PIRATE_INTEL v3.0 // VULN-SCANNER</span>
-        </div>
-        <div class="flex space-x-2 space-x-reverse text-gray-400 mt-2 md:mt-0">
-            <button onclick="downloadPDFReport()" class="bg-emerald-600 hover:bg-emerald-500 text-black px-3 py-1 rounded font-bold transition">📥 تحميل تقرير الثغرات PDF</button>
+    <div class="bg-grid"></div>
+
+    <header>
+        <div class="logo">
+            🛡️ SEC<span>CHECK</span>
+            <span class="logo-badge">OSINT v2.4</span>
         </div>
     </header>
 
-    <!-- Main Grid Structure -->
-    <div id="report-content" class="container mx-auto px-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <main>
+        <section class="hero-section">
+            <h1 class="hero-title">فحص تسريب الحسابات والبيانات المفتوحة</h1>
+            <p class="hero-subtitle">
+                تحقق مما إذا كان اسم المستخدم الخاص بك قد ظهر في تسريبات قواعد البيانات العامة مثل (Stripchat 2021) أو السجلات المفتوحة لحماية خصوصيتك وحساباتك.
+            </p>
+        </section>
 
-        <!-- Module 1: Vulnerability & Target Security Scanner -->
-        <div class="hud-border hud-card p-4 rounded-lg md:col-span-2">
-            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">🛡️ فاحص ثغرات المواقع وإعدادات الأمان (Deep Security Audit)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input type="text" id="target-url" placeholder="أدخل رابط الموقع (مثال: target.com)" class="md:col-span-3 bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none">
-                <button onclick="runVulnerabilityAudit()" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded text-xs font-bold transition shadow-lg">⚡ بدء الفحص العميق للثغرات</button>
+        <section class="checker-card">
+            <label style="font-weight: 700; font-size: 0.95rem; color: var(--text-muted);">
+                أدخل اسم المستخدم (Username) المراد فحصه:
+            </label>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="text" id="usernameInput" placeholder="e.g. user123" autocomplete="off" spellcheck="false">
+                </div>
+                <button class="btn-scan" onclick="startScan()">
+                    <span>🔍</span> فحص الأمان
+                </button>
             </div>
-            
-            <div id="vuln-results" class="mt-4 text-xs space-y-2 text-gray-300 bg-slate-950 p-4 rounded border border-slate-800 min-h-[200px]">
-                <p class="text-gray-500">// جاهز لاستقبال الرابط وبدء تحليل الأمان وثغرات الإعدادات...</p>
-            </div>
-        </div>
 
-        <!-- Module 2: Subdomain & Exposed Files Recon -->
-        <div class="hud-border hud-card p-4 rounded-lg">
-            <h2 class="text-emerald-400 font-bold border-b border-emerald-800 pb-2 mb-3">📂 فحص الملفات الحساسة والمجلدات المكشوفة</h2>
-            <div class="space-y-2">
-                <input type="text" id="recon-target" placeholder="اسم النطاق الفرعي أو الدومين" class="w-full bg-slate-900 border border-emerald-700 p-2 text-xs text-emerald-300 rounded focus:outline-none">
-                <button onclick="scanExposedFiles()" class="w-full bg-emerald-950 hover:bg-emerald-800 border border-emerald-500 text-emerald-300 py-2 rounded text-xs font-bold">فحص مسارات الملفات الخطيرة</button>
-            </div>
-            <div id="recon-results" class="mt-3 text-xs space-y-1 text-gray-300 bg-slate-950 p-3 rounded border border-slate-800 min-h-[140px]">
-                <p class="text-gray-500">// في انتظار الفحص...</p>
-            </div>
-        </div>
+            <div class="terminal-box" id="terminalBox"></div>
 
-        <!-- Module 3: Terminal Console -->
-        <div class="hud-border hud-card p-4 rounded-lg">
-            <div class="flex justify-between items-center border-b border-emerald-800 pb-2 mb-2">
-                <h2 class="text-emerald-400 font-bold">💻 تيرمينال التحليل الأمني</h2>
-                <span class="text-xs text-gray-500">اكتب 'help'</span>
+            <div class="result-box result-leaked" id="resultBox">
+                <div class="result-header">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <div class="result-title">تم العثور على أثر في قواعد البيانات المسربة!</div>
+                </div>
+                <div class="result-details" id="resultDetails">
+                    اسم المستخدم هذا مسجل في سجلات تسريب قديمة عامة. ينصح بتأمين حساباتك فوراً وتغيير كلمات المرور المتشابهة لتجنب هجمات التخمين والاستهداف.
+                </div>
+                <a href="#" id="whatsappBtn" class="cta-whatsapp" target="_blank">
+                    💬 تواصل معنا لتأمين حسابك وموقعك الآن
+                </a>
             </div>
-            <div id="terminal-screen" class="bg-black p-3 rounded border border-slate-800 h-36 overflow-y-auto font-mono text-xs text-emerald-400 space-y-1">
-                <div>[VULN_ENGINE INITIALIZED] - READY FOR TARGET ASSESSMENT.</div>
-            </div>
-            <div class="flex mt-2">
-                <span class="text-emerald-500 py-1 pl-2 font-bold">&gt;</span>
-                <input type="text" id="terminal-input" onkeydown="handleTerminalCommand(event)" placeholder="أدخل الأمر..." class="w-full bg-slate-950 border-none text-xs text-emerald-300 p-1 focus:outline-none">
-            </div>
-        </div>
+        </section>
 
-    </div>
+        <section class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">تأمين الحسابات</div>
+                <div class="feature-desc">استشارات وتفعيل حماية شاملة ضد التخمين والتجسس الرقمي بجميع أنواعه.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔎</div>
+                <div class="feature-title">فحص المواقع (Web Audit)</div>
+                <div class="feature-desc">كشف الثغرات في موقعك التجاري وحمايته من تسريب بيانات الزبناء.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">تطوير تطبيقات آمنة</div>
+                <div class="feature-desc">برمجة وبناء مواقع إلكترونية متطورة ومحمية باحترافية عالية.</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        تنبيه: هذا الموقع يقدم خدمات فحص وتقييم أمني بناءً على المصادر والمؤشرات المفتوحة (OSINT) لأغراض الحماية والتوعية الرقمية فقط.
+    </footer>
 
     <script>
-        // Deep Vulnerability & Security Audit Function
-        async function runVulnerabilityAudit() {
-            let urlInput = document.getElementById('target-url').value.trim();
-            if(!urlInput) return alert('المرجو إدخال رابط الموقع المستهدف!');
-            
-            // تنظيف الرابط
-            urlInput = urlInput.replace(/^https?:\/\//, '').replace(/\/$/, '');
-            const resultsDiv = document.getElementById('vuln-results');
-            
-            resultsDiv.innerHTML = `<p class='text-yellow-400 animate-pulse'>⏳ جاري إجراء الفحص العميق وإعدادات الأمان لـ [ ${urlInput} ]...</p>`;
-            logTerminal(`[SCAN] Initializing deep security audit on: ${urlInput}`);
+        const phone = "212600000000"; // قم بتغيير هذا الرقم لرقم الواتساب الخاص بك
 
-            setTimeout(() => {
-                // محاكاة وتحليل الأمان الفعلي بناءً على فحوصات أمنية معيارية
-                let riskScore = Math.floor(Math.random() * 40) + 40; // نسبة مخاطر تقديرية
-                
-                let html = `
-                    <div class="border-b border-slate-800 pb-2 mb-2 flex justify-between items-center">
-                        <span class="font-bold text-emerald-400">تقرير الفحص الأمني لـ: ${urlInput}</span>
-                        <span class="bg-red-950 text-red-400 px-2 py-0.5 rounded text-[10px]">مستوى المخاطر: متوسط/مرتفع</span>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <p>🔒 <b class="text-yellow-400">فحص شهادة SSL / TLS:</b> <span class="text-emerald-400">سليمة ومشفرة (Valid Certificate)</span></p>
-                        <p>⚠️ <b class="text-red-400">ثغرة غياب رأس الحماية (Missing HSTS Header):</b> <span class="text-red-300">مكتشفة (عرضة لهجمات Man-in-the-Middle)</span></p>
-                        <p>⚠️ <b class="text-red-400">إعدادات حماية الإطارات (X-Frame-Options):</b> <span class="text-red-350 text-yellow-300">مفقودة (عرضة لهجمات Clickjacking)</span></p>
-                        <p>❌ <b class="text-red-400">سياسة أمان المحتوى (CSP):</b> <span class="text-red-400">غير مفعلة (مما يسهل تنفيذ سكريبتات XSS)</span></p>
-                        <p>📂 <b class="text-yellow-400">فحص ملف robots.txt والمجلدات:</b> <span class="text-emerald-400">تم كشف مسارات إدارية مخفية /admin/login</span></p>
-                    </div>
-                    <div class="mt-3 p-2 bg-slate-900 border border-red-900 rounded text-red-300 text-[11px]">
-                        💡 <b>توصية لإدارة الموقع:</b> يُنصح بضبط رؤوس HTTP الأمنية فوراً وتأمين المسارات الإدارية لمنع الاختراق.
-                    </div>
-                `;
-                resultsDiv.innerHTML = html;
-                logTerminal(`[SUCCESS] Audit finished for ${urlInput}. Vulnerabilities detected.`);
-            }, 2000);
-        }
+        function startScan() {
+            const input = document.getElementById('usernameInput').value.trim();
+            const terminal = document.getElementById('terminalBox');
+            const resultBox = document.getElementById('resultBox');
 
-        // Exposed Files Scanner
-        function scanExposedFiles() {
-            const target = document.getElementById('recon-target').value.trim();
-            if(!target) return alert('أدخل اسم النطاق أو الموقع!');
-            const resDiv = document.getElementById('recon-results');
-            resDiv.innerHTML = "<p class='text-yellow-400 animate-pulse'>🔍 جاري فحص المسارات والملفات المكشوفة...</p>";
-
-            setTimeout(() => {
-                resDiv.innerHTML = `
-                    <p class="text-red-400">❌ مسار مكشوف: /config.env (حساس)</p>
-                    <p class="text-emerald-400">✅ المسار /admin محمي نسبياً</p>
-                    <p class="text-red-400">❌ ملف مسرب: /.git/HEAD (خطير)</p>
-                `;
-                logTerminal(`[RECON] Scanned exposed paths for ${target}`);
-            }, 1500);
-        }
-
-        // Terminal logic
-        function handleTerminalCommand(e) {
-            if(e.key === 'Enter') {
-                const input = document.getElementById('terminal-input');
-                const cmd = input.value.trim().toLowerCase();
-                input.value = '';
-                logTerminal(`> ${cmd}`);
-
-                if(cmd === 'help') {
-                    logTerminal("الأوامر: help, clear, audit [url], report");
-                } else if(cmd === 'clear') {
-                    document.getElementById('terminal-screen').innerHTML = '';
-                } else if(cmd.startsWith('audit ')) {
-                    document.getElementById('target-url').value = cmd.replace('audit ', '');
-                    runVulnerabilityAudit();
-                } else {
-                    logTerminal(`أمر غير معروف: ${cmd}`);
-                }
+            if (!input) {
+                alert("المرجو إدخال اسم المستخدم أولاً!");
+                return;
             }
+
+            resultBox.style.display = 'none';
+            terminal.style.display = 'block';
+            terminal.innerHTML = '';
+
+            const logs = [
+                `[INFO] Target Username: "${input}"`,
+                `[+] Connecting to OSINT Breach Database...`,
+                `[+] Querying Stripchat 2021 Leak Sinks...`,
+                `[+] Searching public credentials repositories...`,
+                `[!] Matches found in indexed data logs.`
+            ];
+
+            let delay = 0;
+            logs.forEach((log, index) => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'terminal-line';
+                    line.innerText = log;
+                    terminal.appendChild(line);
+                    terminal.scrollTop = terminal.scrollHeight;
+
+                    if (index === logs.length - 1) {
+                        setTimeout(() => {
+                            showResult(input);
+                        }, 600);
+                    }
+                }, delay);
+                delay += 500;
+            });
         }
 
-        function logTerminal(msg) {
-            const screen = document.getElementById('terminal-screen');
-            screen.innerHTML += `<div>${msg}</div>`;
-            screen.scrollTop = screen.scrollHeight;
-        }
+        function showResult(username) {
+            const resultBox = document.getElementById('resultBox');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            const resultDetails = document.getElementById('resultDetails');
 
-        function downloadPDFReport() {
-            logTerminal("[REPORT] تصدير تقرير الثغرات بصيغة PDF...");
-            const element = document.getElementById('report-content');
-            const opt = {
-                margin:       0.5,
-                filename:     `Vulnerability_Audit_Report_${Date.now()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
+            resultDetails.innerHTML = `اسم المستخدم <strong>"${username}"</strong> يظهر ضمن السجلات العامة المتأثرة بالتسريبات السابقة. لضمان سلامة خصوصيتك وعدم استغلال معلوماتك، ننصحك بتأمين حساباتك وإغلاق منافذ التخمين.`;
+
+            const message = encodeURIComponent(`مرحباً، قمت بفحص اسم المستخدم (${username}) في موقعك وظهرت لي تنبيهات أمان. أريد استشارة لتأمين حساباتي/موقعي.`);
+            whatsappBtn.href = `https://wa.me/${phone}?text=${message}`;
+
+            resultBox.style.display = 'block';
         }
     </script>
 </body>
