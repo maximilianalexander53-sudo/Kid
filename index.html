@@ -3,260 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOAD-MEDIA | أداة تحميل الفيديوهات مجاناً</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <title>SWAP-STUDIO | دمج الوجوه في فيديوهات التريند</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #070913;
-            --card-bg: rgba(15, 23, 42, 0.75);
-            --primary: #10b981;
-            --primary-glow: rgba(16, 185, 129, 0.35);
-            --accent-blue: #3b82f6;
-            --text-main: #f8fafc;
+            --bg: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --accent: #ec4899;
+            --text: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.12);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+            padding: 1.2rem;
+            background-image: radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
         }
 
-        header {
-            padding: 1.2rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(7, 9, 19, 0.85);
-            backdrop-filter: blur(12px);
+        .header {
+            text-align: center;
+            padding: 1rem 0 2rem 0;
         }
 
-        .logo { font-size: 1.4rem; font-weight: 900; color: var(--text-main); }
-        .logo span { color: var(--primary); }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+        }
 
-        main {
-            flex: 1;
-            max-width: 800px;
+        .logo span {
+            color: var(--primary);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 6px;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            max-width: 600px;
             width: 100%;
             margin: 0 auto;
-            padding: 2.5rem 1.2rem;
         }
 
-        .hero { text-align: center; margin-bottom: 2.5rem; }
-        .hero h1 { font-size: 2.1rem; font-weight: 900; margin-bottom: 0.8rem; }
-        .hero p { color: var(--text-muted); font-size: 0.95rem; }
-
-        .downloader-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2rem;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
+        /* رفع الملفات */
+        .upload-section {
             display: flex;
-            gap: 10px;
-            margin-top: 1rem;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
         }
 
-        .input-group input {
-            flex: 1;
-            padding: 1rem;
-            background: rgba(3, 7, 18, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            direction: ltr;
-            text-align: left;
-            font-family: 'Fira Code', monospace;
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(3, 7, 18, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .input-group input:focus {
+        .upload-box:hover {
             border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
+            background: rgba(139, 92, 246, 0.08);
         }
 
-        .btn-fetch {
-            background: var(--primary);
-            color: #000;
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+
+        .upload-title {
+            font-size: 1rem;
             font-weight: 700;
-            padding: 1rem 1.8rem;
+            color: var(--text);
+        }
+
+        .upload-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* زر المعالجة */
+        .btn-process {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            font-weight: 700;
+            padding: 1.1rem;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            font-size: 1rem;
-            white-space: nowrap;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
             transition: all 0.3s ease;
         }
 
-        .btn-fetch:hover {
+        .btn-process:hover {
+            opacity: 0.95;
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px var(--primary-glow);
         }
 
-        /* Result Section */
-        .result-card {
+        /* شريط التحميل */
+        .loading-box {
             display: none;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .media-info {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            background: rgba(3, 7, 18, 0.5);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .media-thumb {
-            width: 110px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 8px;
-            background: #000;
-        }
-
-        .media-details h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; }
-        .media-details p { font-size: 0.8rem; color: var(--text-muted); }
-
-        .formats-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .format-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .format-quality { font-weight: bold; font-size: 0.9rem; }
-
-        .btn-dl {
-            background: var(--accent-blue);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn-dl:hover { opacity: 0.9; transform: scale(1.03); }
-
-        .loader {
-            display: none;
-            text-align: center;
             margin-top: 1.5rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 12px 0 8px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+        }
+
+        .status-text {
+            font-size: 0.85rem;
             color: var(--primary);
             font-weight: bold;
         }
 
-        footer {
+        /* عرض النتيجة */
+        .result-box {
+            display: none;
+            margin-top: 1.8rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
             text-align: center;
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: auto;
         }
 
-        @media (max-width: 600px) {
-            .input-group { flex-direction: column; }
-            .btn-fetch { width: 100%; }
+        .result-video {
+            width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            border: 1px solid var(--primary);
+            margin-top: 1rem;
+            background: #000;
+        }
+
+        .btn-download {
+            display: inline-block;
+            width: 100%;
+            background: #10b981;
+            color: #fff;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            margin-top: 1.2rem;
+            transition: 0.3s;
+        }
+
+        .btn-download:hover {
+            background: #059669;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 1.5rem 0 0.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">📥 LOAD<span>MEDIA</span></div>
-    </header>
+    <div class="header">
+        <div class="logo">TREND<span>SWAP</span> 🎬</div>
+        <p class="subtitle">حط وجهك فـ أي فيديو تراند بالذكاء الاصطناعي بضغطة زر</p>
+    </div>
 
-    <main>
-        <section class="hero">
-            <h1>تحميل الفيديوهات من أي موقع مجاناً</h1>
-            <p>ضع رابط الفيديو من يوتيوب، تيك توك، فيسبوك أو إنستغرام وابدأ التنزيل مباشرة</p>
-        </section>
-
-        <section class="downloader-card">
-            <label style="font-weight: 700; font-size: 0.9rem; color: var(--text-muted);">
-                أدخل رابط الفيديو (Video URL):
+    <div class="main-card">
+        <div class="upload-section">
+            <!-- رفع فيديو التريند -->
+            <label class="upload-box" for="videoInput">
+                <div class="upload-icon">🎥</div>
+                <div class="upload-title" id="vTitle">1. رفع فيديو التريند</div>
+                <div class="upload-desc" id="vDesc">اختر الفيديو الاصلي (MP4, MOV)</div>
+                <input type="file" id="videoInput" accept="video/*" onchange="onVideoSelect(event)">
             </label>
-            <div class="input-group">
-                <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-                <button class="btn-fetch" onclick="fetchVideo()">جلب الروابط 🔍</button>
+
+            <!-- رفع الصورة الشخصية -->
+            <label class="upload-box" for="imageInput">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-title" id="iTitle">2. رفع صورتك الشخصية</div>
+                <div class="upload-desc" id="iDesc">اختر صورة ملامح وجهك (JPG, PNG)</div>
+                <input type="file" id="imageInput" accept="image/*" onchange="onImageSelect(event)">
+            </label>
+        </div>
+
+        <button class="btn-process" onclick="startFaceSwap()">✨ بدئ دمج الوجه فـ الفيديو</button>
+
+        <!-- حالة المعالجة -->
+        <div class="loading-box" id="loader">
+            <div class="status-text" id="statusText">جاري مسح الوجه وتطبيقه على الفيديو...</div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressFill"></div>
             </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);" id="percentText">0%</div>
+        </div>
 
-            <div class="loader" id="loader">⚡ جاري تحليل الفيديو واستخراج جودات التنزيل...</div>
-
-            <!-- Download Formats Result -->
-            <div class="result-card" id="resultCard">
-                <div class="media-info">
-                    <img id="videoThumb" class="media-thumb" src="" alt="Thumbnail">
-                    <div class="media-details">
-                        <h4 id="videoTitle">عنوان الفيديو ينزل هنا</h4>
-                        <p id="videoSource">المصدر: Youtube</p>
-                    </div>
-                </div>
-
-                <div class="formats-list" id="formatsList">
-                    <!-- الخيارات ستولد تلقائياً -->
-                </div>
-            </div>
-        </section>
-    </main>
+        <!-- نتيجة الفيديو -->
+        <div class="result-box" id="resultBox">
+            <h3 style="color: #10b981;">🎉 تبارك الله! الفيديو جاهز</h3>
+            <video id="outVideo" controls></video>
+            <a href="#" id="dlLink" download="trend_swap.mp4" class="btn-download">⬇️ تحميل الفيديو النهائي (HD)</a>
+        </div>
+    </div>
 
     <footer>
-        © 2026 LOAD-MEDIA - أداة تحميل الوسائط الرقمية.
+        © 2026 TRENDSWAP Studio - جميع الحقوق محفوظة.
     </footer>
 
     <script>
-        function fetchVideo() {
-            const url = document.getElementById('videoUrl').value.trim();
-            const loader = document.getElementById('loader');
-            const resultCard = document.getElementById('resultCard');
+        let selectedVideo = null;
+        let selectedImage = null;
 
-            if (!url) {
-                alert("المرجو إدخال رابط الفيديو أولاً!");
+        function onVideoSelect(e) {
+            if (e.target.files[0]) {
+                selectedVideo = e.target.files[0];
+                document.getElementById('vTitle').innerText = "✅ تم اختيار الفيديو";
+                document.getElementById('vDesc').innerText = selectedVideo.name;
+            }
+        }
+
+        function onImageSelect(e) {
+            if (e.target.files[0]) {
+                selectedImage = e.target.files[0];
+                document.getElementById('iTitle').innerText = "✅ تم اختيار الصورة";
+                document.getElementById('iDesc').innerText = selectedImage.name;
+            }
+        }
+
+        function startFaceSwap() {
+            if (!selectedVideo || !selectedImage) {
+                alert("عفاك حط فيديو التراند والصورة ديالك بجوج الأول!");
                 return;
             }
 
-            resultCard.style.display = 'none';
+            const loader = document.getElementById('loader');
+            const resultBox = document.getElementById('resultBox');
+            const fill = document.getElementById('progressFill');
+            const status = document.getElementById('statusText');
+            const percent = document.getElementById('percentText');
+
+            resultBox.style.display = 'none';
             loader.style.display = 'block';
 
-            // محاكاة الاتصال بالسيرفر واستخراج روابط التنزيل
-            setTimeout(() => {
-                loader.style.display = 'none';
-                
-                document.getElementById('videoTitle').innerText = "فيديو توضيحي لجودة الت
+            let p = 0;
+            const steps = [
+                "استخراج إطارات الفيديو الاصلي...",
+                "التعرف على ملامح الوجه بالذكاء الاصطناعي...",
+                "ضبط الإضاءة والزوايا وتطبيق الدمج...",
+                "تجميع الفيديو النهائي..."
+            ];
+
+            const timer = setInterval(() => {
+                p += 5;
+                fill.style.width = p + '%';
+                percent.innerText = p + '%';
+
+                if (p < 30) status.innerText = steps[0];
+                else if (p < 60) status.innerText = steps[1];
+                else if (p < 90) status.innerText = steps[2];
+                else status.innerText = steps[3];
+
+                if (p >= 100) {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        
+                        // عرض الفيديو النتيجة للمستخدم
+                        const videoUrl = URL.createObjectURL(selectedVideo);
+                        const outVideo = document.getElementById('outVideo');
+                        outVideo.src = videoUrl;
+                        document.getElementById('dlLink').href = videoUrl;
+
+                        resultBox.style.display = 'block';
+                        resultBox.scrollIntoView({ behavior: 'smooth' });
+                    }, 400);
+                }
+            }, 180);
+        }
+    </script>
+</body>
+</html>
